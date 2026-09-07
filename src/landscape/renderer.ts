@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { headGrouping } from "./visual-encoding";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   projectLandscapeLinks,
@@ -400,57 +401,52 @@ export class LandscapeRenderer {
     } else if (g.kind === "heads") {
       const n = this.headCount(g);
       const shared = String(this.declared(g, "KV") ?? "").includes("shared");
-      const count = Math.max(1, Math.min(256, n));
+      const kv = Number(this.declared(g, "kvHeads") ?? (shared ? 1 : n));
+      const grouping = headGrouping(n, kv);
       const points: number[] = [];
-      for (let i = 0; i < count; i++) {
-        const x = (i / (count - 1 || 1) - 0.5) * w * 0.95;
-        const steps = 7;
-        let px = x * (shared ? 0.08 : 0.72),
+      for (const head of grouping.heads) {
+        const x = head.queryX * w * 0.95,
+          base = head.kvX * w * 0.72;
+        let px = base,
           py = -h * 0.35,
           pz = 0;
-        for (let j = 1; j <= steps; j++) {
-          const t = j / steps;
-          const nx = x * (shared ? 0.08 + 0.92 * t * t : 0.72 + 0.28 * t * t);
-          const ny = -h * 0.35 + h * 0.77 * t;
-          const nz = Math.sin(t * Math.PI) * 2.5;
+        for (let j = 1; j <= 7; j++) {
+          const t = j / 7,
+            nx = base + (x - base) * t * t,
+            ny = -h * 0.35 + h * 0.77 * t,
+            nz = Math.sin(t * Math.PI) * Math.min(2.5, h * 0.12);
           points.push(px, py, pz, nx, ny, nz);
           px = nx;
           py = ny;
           pz = nz;
         }
       }
-      group.add(this.segments(points, c, 0.38));
-      if (shared) this.mark(group, 0, -h * 0.35, w * 0.16, 1.4, c, 0.3, 0.9);
-      else
-        this.marks(
-          group,
-          Array.from({ length: count }, (_, i) => [
-            (i / (count - 1 || 1) - 0.5) * w * 0.72,
-            -h * 0.35,
-            Math.max(0.1, (w / count) * 0.5),
-            h * 0.045,
-            0.3,
-          ]),
-          c,
-          0.8,
-        );
-      this.mark(group, 0, h * 0.42, w * 0.96, 0.22, c, 0.3, 0.9);
-      const headMarkers = new THREE.InstancedMesh(
-        this.plane,
-        new THREE.MeshBasicMaterial({ color: c }),
-        count,
-      );
-      const matrix = new THREE.Matrix4();
-      for (let i = 0; i < count; i++) {
-        matrix.makeScale(Math.max(0.1, (w / count) * 0.56), h * 0.06, 1);
-        matrix.setPosition(
-          (i / (count - 1 || 1) - 0.5) * w * 0.95,
-          h * 0.46,
+      group.add(this.segments(points, c, 0.45));
+      this.marks(
+        group,
+        grouping.keys.map((key) => [
+          key.x * w * 0.72,
+          -h * 0.35,
+          kv === 1 ? w * 0.16 : Math.max(0.1, (w / kv) * 0.45),
+          h * 0.045,
           0.3,
-        );
-        headMarkers.setMatrixAt(i, matrix);
-      }
-      group.add(headMarkers);
+        ]),
+        c,
+        0.9,
+      );
+      this.mark(group, 0, h * 0.42, w * 0.96, 0.22, c, 0.3, 0.9);
+      this.marks(
+        group,
+        grouping.heads.map((head) => [
+          head.queryX * w * 0.95,
+          h * 0.46,
+          Math.max(0.1, (w / n) * 0.56),
+          h * 0.06,
+          0.3,
+        ]),
+        c,
+        0.95,
+      );
       if (g.attrs?.semanticSummary) {
         const ratio = Number(g.attrs?.compressionRatio ?? 0);
         if (ratio) {
@@ -470,6 +466,153 @@ export class LandscapeRenderer {
           );
         }
       }
+    } else if (g.kind === "state") {
+      // A recurrent state is a fixed-size memory, not a token-by-token attention grid.
+      const stateShape = Array.isArray(g.attrs?.stateShape)
+        ? g.attrs.stateShape
+        : g.shape;
+      this.matrixSheet(
+        group,
+        w * 0.38,
+        h * 0.59,
+        c,
+        stateShape?.slice(-2),
+        0,
+        0,
+        0.3,
+      );
+      if (
+        g.attrs?.sourceKind === "LinearAttention" ||
+        g.attrs?.temporalRecurrence === true
+      ) {
+        const loop = new THREE.CubicBezierCurve3(
+          new THREE.Vector3(w * 0.2, 0, 0.2),
+          new THREE.Vector3(w * 0.52, h * 0.72, 1),
+          new THREE.Vector3(-w * 0.52, h * 0.72, 1),
+          new THREE.Vector3(-w * 0.2, 0, 0.2),
+        );
+        group.add(this.line(loop.getPoints(28), c, 0.65));
+        group.add(
+          this.segments(
+            [
+              -w * 0.2,
+              0,
+              0.3,
+              -w * 0.24,
+              h * 0.12,
+              0.3,
+              -w * 0.2,
+              0,
+              0.3,
+              -w * 0.32,
+              h * 0.025,
+              0.3,
+            ],
+            c,
+            0.9,
+          ),
+        );
+        group.add(
+          this.line(
+            [
+              new THREE.Vector3(-w * 0.48, -h * 0.28, 0),
+              new THREE.Vector3(-w * 0.2, -h * 0.13, 0),
+            ],
+            c,
+            0.75,
+          ),
+        );
+        group.add(
+          this.line(
+            [
+              new THREE.Vector3(w * 0.2, -h * 0.13, 0),
+              new THREE.Vector3(w * 0.48, -h * 0.28, 0),
+            ],
+            c,
+            0.75,
+          ),
+        );
+      }
+    } else if (g.kind === "convolution") {
+      const n = Math.max(
+        1,
+        Math.min(12, Number(g.attrs?.kernelSize ?? g.attrs?.convKernel ?? 1)),
+      );
+      this.grid(group, w, h * 0.4, n, 1, c, 0.55, 0);
+      const a: number[] = [];
+      for (let i = 0; i < n; i++) {
+        const x = ((i + 0.5) / n - 0.5) * w;
+        a.push(x, -h * 0.2, 0, 0, -h * 0.42, 0.1);
+      }
+      group.add(this.segments(a, c, 0.5));
+    } else if (g.kind === "gate") {
+      group.add(
+        this.mesh(
+          new THREE.RingGeometry(
+            Math.min(w, h) * 0.28,
+            Math.min(w, h) * 0.32,
+            24,
+          ),
+          c,
+          0.8,
+        ),
+      );
+      group.add(
+        this.segments(
+          [
+            -w * 0.12,
+            -h * 0.12,
+            0.1,
+            w * 0.12,
+            h * 0.12,
+            0.1,
+            -w * 0.12,
+            h * 0.12,
+            0.1,
+            w * 0.12,
+            -h * 0.12,
+            0.1,
+          ],
+          c,
+          0.9,
+        ),
+      );
+    } else if (g.kind === "rotary") {
+      const radius = Math.min(w, h) * 0.38;
+      const arc = Array.from(
+        { length: 25 },
+        (_, i) =>
+          new THREE.Vector3(
+            Math.cos((i / 24) * Math.PI * 1.65) * radius,
+            Math.sin((i / 24) * Math.PI * 1.65) * radius,
+            0,
+          ),
+      );
+      group.add(this.line(arc, c, 0.6));
+      group.add(
+        this.segments(
+          [
+            0,
+            0,
+            0.1,
+            radius,
+            0,
+            0.1,
+            0,
+            0,
+            0.1,
+            radius * 0.45,
+            radius * 0.89,
+            0.1,
+          ],
+          c,
+          0.9,
+        ),
+      );
+    } else if (g.kind === "vision") {
+      this.matrixSheet(group, w * 0.92, h * 0.65, c, undefined, 0, 0, 0);
+      this.grid(group, w * 0.75, h * 0.49, 4, 4, c, 0.3, 0.3);
+      // Patch lattice denotes image encoding; no image pixels or activations are invented.
     } else if (g.kind === "experts") {
       const ids = this.expertIds(g);
       const count = Number(

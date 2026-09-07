@@ -14,6 +14,11 @@ export type GlyphKind =
   | "stream"
   | "embedding"
   | "output"
+  | "state"
+  | "convolution"
+  | "gate"
+  | "rotary"
+  | "vision"
   | "generic";
 export interface Glyph {
   id: string;
@@ -127,6 +132,17 @@ export function compileLandscape(ir: ModelIR): Landscape {
     return false;
   };
   const kindOf = (e: Entity): GlyphKind => {
+    if (e.kind === "LinearAttention" || e.kind === "RecurrentState")
+      return "state";
+    if (e.kind === "CausalConvolution") return "convolution";
+    if (e.kind === "Gate") return "gate";
+    if (e.kind === "VisionEncoder" || e.kind === "VisionBlock") return "vision";
+    if (
+      e.kind === "ProjectionBlock" &&
+      typeof e.attrs?.rotaryDimensions === "number"
+    )
+      return "rotary";
+    if (e.kind === "RotaryEmbedding") return "rotary";
     if (e.kind === "NormalizationPlane") return "norm";
     if (e.kind === "HyperConnectionMix" || e.kind === "ResidualBus")
       return "mix";
@@ -177,7 +193,9 @@ export function compileLandscape(ir: ModelIR): Landscape {
   ): Glyph => {
     const previous = glyphById.get(e.id);
     if (previous) return previous;
-    const shape = ownShape(e);
+    const shape = Array.isArray(e.attrs?.stateShape)
+      ? (e.attrs.stateShape as Shape)
+      : ownShape(e);
     const glyph: Glyph = {
       id: e.id,
       entityId: e.id,
@@ -296,7 +314,8 @@ export function compileLandscape(ir: ModelIR): Landscape {
             : kind === "stream"
               ? 3
               : 8.3;
-      const h = kind === "heads" ? 15 : kind === "matrix" ? 10 : 7;
+      const h =
+        kind === "heads" || kind === "state" ? 15 : kind === "matrix" ? 10 : 7;
       emit(entity, block, x, y, w, h, 2, "attention");
     }
     return {
@@ -349,10 +368,14 @@ export function compileLandscape(ir: ModelIR): Landscape {
     );
     const direct = children(entity.id).filter((e) => !e.tensorId);
     const attention = direct.find(
-      (e) => e.kind === "CompressedAttention" || e.kind === "AttentionHead",
+      (e) =>
+        e.kind === "CompressedAttention" ||
+        e.kind === "AttentionHead" ||
+        e.kind === "LinearAttention",
     );
     const experts = direct.find((e) => e.kind === "ExpertCluster");
     const dense = direct.find((e) => e.kind === "ActivationLayer");
+    if (dense) block.expertsId = dense.id;
     const flow = flowRanks(entity, direct);
     const residuals = direct
       .filter(
@@ -429,6 +452,21 @@ export function compileLandscape(ir: ModelIR): Landscape {
       if (shared) emit(shared, block, 45, -43, 11, 20, 2, "expert");
       const merge = inner.find((e) => e.kind === "ResidualBus");
       if (merge) emit(merge, block, 43, -17, 7, 7, 2, "expert");
+      inner
+        .filter((e) => !glyphById.has(e.id))
+        .slice(0, 4)
+        .forEach((e, i) =>
+          emit(
+            e,
+            block,
+            e.kind === "Gate" ? 45 : -25 + i * 12,
+            e.kind === "Gate" ? -28 : -61,
+            6,
+            6,
+            2,
+            "expert",
+          ),
+        );
       Object.assign(glyphById.get(experts.id)!.attrs!, {
         entryGlyphId: input?.id ?? router?.id ?? bank?.id,
         exitGlyphId: merge?.id ?? bank?.id,
@@ -483,34 +521,63 @@ export function compileLandscape(ir: ModelIR): Landscape {
   for (const descendants of blockDescendants.values())
     descendants.sort((a, b) => a.index - b.index);
 
-  // Top-level non-block stages are modest landmark glyphs. Repeated arrays are
-  // represented by their persistent descendants, not by additional container boxes.
+  // Unwrap structural stages to find real non-decoder operators. A stage or
+  // containing folder must not replace its embedding/output/vision operations.
   const first = blocks.find((b) => !b.auxiliary);
   const last = [...blocks].reverse().find((b) => !b.auxiliary);
+  const landmarks: Entity[] = [];
+  const pending = [...children(ir.rootId)].reverse();
+  while (pending.length) {
+    const entity = pending.pop()!;
+    if (entity.tensorId || blockById.has(entity.id)) continue;
+    if (
+      ["ModelStage", "Model", "Module", "RepeatedModuleArray"].includes(
+        entity.kind,
+      )
+    ) {
+      pending.push(...children(entity.id).slice().reverse());
+    } else landmarks.push(entity);
+  }
+  // Upstream placement follows supplied graph reachability, not a model name.
+  const upstream = new Set<string>();
+  const sources = core.flatMap((e) => ancestors(e.id).map((e) => e.id));
+  while (sources.length) {
+    const id = sources.pop()!;
+    if (upstream.has(id)) continue;
+    upstream.add(id);
+    for (const edge of index.incident.get(id) ?? [])
+      if (
+        edge.to === id &&
+        (edge.kind === "dataflow" || edge.kind === "residual")
+      )
+        sources.push(edge.from);
+  }
   let endSlot = 0,
     embeddingSlot = 0;
-  for (const entity of children(ir.rootId)) {
-    if (
-      entity.kind === "RepeatedModuleArray" ||
-      blockById.has(entity.id) ||
-      entity.tensorId
-    )
-      continue;
-    const upstream = entity.kind === "EmbeddingTable";
-    const base = upstream ? first : last;
-    const direction = base?.direction ?? 1;
+  for (const entity of landmarks) {
+    const before =
+      upstream.has(entity.id) ||
+      entity.kind === "EmbeddingTable" ||
+      entity.kind === "VisionEncoder";
+    const base = before ? first : last,
+      direction = base?.direction ?? 1;
+    const isInput =
+      entity.kind === "EmbeddingTable" || entity.kind === "VisionEncoder";
     const x =
       (base?.position[0] ?? 0) +
-      (upstream ? -84 : 80 + endSlot++ * 38) * direction;
+      (before ? (isInput ? -100 : -62) : 80 + endSlot++ * 38) * direction;
+    const y = (base?.position[1] ?? 0) + (isInput ? embeddingSlot++ * 68 : 0);
     emit(
       entity,
       undefined,
       x,
-      (base?.position[1] ?? 0) + (upstream ? embeddingSlot++ * 68 : 0),
-      upstream ? 22 : 15,
-      upstream || entity.kind === "VocabularyPlane" ? 58 : 22,
+      y,
+      isInput ? 24 : 15,
+      isInput || entity.kind === "VocabularyPlane" ? 58 : 22,
       1,
-      entity.kind === "HyperConnectionMix" ? "residual" : "neutral",
+      entity.kind === "HyperConnectionMix" || entity.kind === "ResidualBus"
+        ? "residual"
+        : "neutral",
     );
   }
 

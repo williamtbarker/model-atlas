@@ -5,34 +5,49 @@ heads, compressed memory, routers, expert fields and parameter matrices. Approac
 an operation, follow its declared connections, and inspect exact tensor dimensions
 without downloading the model's weights.
 
-**0.2.0-alpha.1 — continuous landscape review build.** The landing page now opens
-DeepSeek-V4-Pro's 61 core blocks together. An auxiliary prediction block remains
-separate. GPT-2 is included as a reference model. Camera zoom reveals operations
-inside the same spatial layout.
+**v0.2.0 — continuous model landscape.** Explore DeepSeek-V4-Pro, Llama 4
+Maverick, Qwen3.5-397B-A17B, or GPT-2 in the same renderer. Camera zoom reveals
+operations inside a persistent spatial layout. Grouped-query attention shows
+which queries share KV groups; recurrent attention uses a state-and-update
+representation rather than a softmax attention grid.
 
-This is a structural map. It does not contain DeepSeek's trained parameter values
-or runtime activations. The separate [numerical microscope](microscope.html)
-contains exact recorded arithmetic from the small trained Recall-2 model.
+These are structural maps, with exact parameter addresses and explicit source
+scope. They contain no trained values or runtime activations for the large
+models. The separate [numerical microscope](microscope.html) contains exact
+recorded arithmetic from the small trained Recall-2 model.
 
-**Visual review is still required.** Browser access was blocked in the development
-environment. The build and mathematical checks are verified separately; no claim
-of completed browser visual QA or measured MacBook graphics performance is made.
-See [review notes](LANDSCAPE_REVIEW.md) and [visual semantics](docs/landscape.md).
+| Model | Included architecture | Learned parameters in package |
+| --- | --- | ---: |
+| [DeepSeek-V4-Pro](docs/deepseek4-provenance.md) | 61 core decoder blocks plus the auxiliary prediction block | 1,598,837,347,742 |
+| [Llama 4 Maverick](docs/llama4-maverick-provenance.md) | All 48 decoder blocks, vision encoder, image adapter and projector | 401,583,781,376 |
+| [Qwen3.5-397B-A17B](docs/qwen35-provenance.md) | **Text decoder only:** 60 blocks, embeddings, final norm and vocabulary head; excludes vision and auxiliary prediction | 396,346,350,336 |
+| GPT-2 | Complete 12-block reference architecture, including tied output storage | 124,439,808 |
+
+Maverick's vision branch appears as an upstream summary with its detailed
+inventory addressable through search. The Llama and Qwen shapes are derived from
+pinned constructors; Qwen's serialized names also match its checkpoint index.
+Those packages do not claim verification against individual weight-file headers.
+See each provenance document for accounting, storage mappings and limitations.
+
+The original landscape received positive local review on a MacBook. The new
+model additions and navigation changes have automated and source validation;
+there was **no fresh browser visual QA or graphics performance benchmark** in
+the development environment. See [review notes](LANDSCAPE_REVIEW.md).
 
 ## Run from GitHub
 
 With Node.js 22.12 or newer:
 
 ```bash
-git clone --branch feat/continuous-landscape https://github.com/williamtbarker/model-atlas.git
+git clone https://github.com/williamtbarker/model-atlas.git
 cd model-atlas
 npm ci
 npm run dev
 ```
 
 Open the address Vite prints, normally http://127.0.0.1:5173. The landscape opens
-DeepSeek immediately. Use the model selector for GPT-2. The `main` branch and
-`v0.1.0` tag retain the prior public release until this preview is reviewed.
+DeepSeek immediately. Use the model selector to switch among the four bundled
+architectures. The original `v0.1.0` tag preserves the earlier public checkpoint.
 
 `dist/` is generated and is not committed to Git. To use `node serve.mjs` from a
 clone, first run `npm run build`. The downloadable release ZIP already includes
@@ -74,14 +89,18 @@ recordings load only when you open the microscope.
 
 1. **Whole model** fits the complete decoder. The bottom strip addresses every
    core block; the component lens also links to the auxiliary block.
-2. **Block** approaches the selected block. **Attention** and **Experts** move
-   closer; scrolling preserves the same spatial anchors.
+2. **Block** approaches the selected block. **Attention** and **Experts** (or
+   **Feed-forward** in a dense block) move closer; scrolling preserves the same
+   spatial anchors.
 3. Click an operation to see dimensions, formulas and declared connections.
    Follow an input or output to inspect the connected operator.
 4. Click any expert mark, or choose an expert in the component lens. Approach it
    to reveal its own parameter sheets, then enter a valid scalar coordinate.
    The address is exact; absent trained values are explicitly unavailable.
-5. Use **Numerical microscope** for recorded calculations, signed contributions
+5. **Copy view link** preserves the model, component and view mode. **Back**
+   revisits earlier selections, including across models. Orbit angles are not
+   recorded. Press `/` to focus component search.
+6. Use **Numerical microscope** for recorded calculations, signed contributions
    and head ablations in Recall-2. The earlier metadata catalog is linked under
    **Reading this map**.
 
@@ -145,7 +164,7 @@ and the optional NumPy-only reproduction workflow.
 | `src/microscope/app.ts`        | Example, stage, head, token, and intervention interaction                                                |
 | `public/traces/recall.json.gz` | Complete numerical evidence for the teaching example                                                     |
 | `examples/recall/`             | Independent trainer, small checkpoint, and numerical verification                                        |
-| `src/lib/` / `exporters/`      | Earlier generic architecture explorer and Python inspection adapters                                     |
+| `src/lib/` / `exporters/`      | Canonical ModelIR, tensor inspection and independent Python architecture exporters |
 
 Rendering has no model-name conditionals. The microscope's adapter currently
 supports this recorded pre-norm transformer schema. Adapting another architecture
@@ -164,9 +183,21 @@ npm test
 npm run build
 ```
 
-The new numerical tests reconcile more than 100,000 displayed scalar calculations
-across the recordings, verify unique parameter accounting, and confirm that
-ablations change downstream attention while preserving scene positions.
+Tests check exact parameter inventories, model scopes, attention sharing,
+recurrent dependencies, bounded semantic layout, URL navigation and stale model
+loads. The numerical tests also reconcile more than 100,000 displayed scalar
+calculations and confirm that ablations change downstream attention while
+preserving scene positions.
+
+The new architecture exporters use the Python standard library and checked-in
+metadata. Regenerate or validate them separately from the viewer:
+
+```bash
+python3 -m exporters.llama4
+python3 -m exporters.qwen35
+python3 -m unittest discover -s tests -p 'test_llama4.py'
+python3 -m unittest discover -s tests -p 'test_qwen35.py'
+```
 
 To run the optional Python checks:
 
@@ -177,16 +208,17 @@ python -m pip install -r examples/recall/requirements.txt
 npm run test:trace
 ```
 
-TypeScript compilation and numerical checks were run in the development
-environment. **MacBook graphics performance and browser interaction still require
-human review.** This release does not claim completed browser visual QA.
+TypeScript compilation, source review and automated checks were run in the
+development environment. The prior landscape was reviewed locally by the project
+owner; the new model additions have not received a fresh browser visual review
+here. No measured MacBook graphics performance is claimed.
 
 ## Design, prior art, and license
 
 - [Continuous landscape semantics and limits](docs/landscape.md)
-- [Landscape review build](LANDSCAPE_REVIEW.md)
+- [Validation scope and local review](LANDSCAPE_REVIEW.md)
 - [Development roadmap](ROADMAP.md)
-- [v0.1.0 release notes](RELEASE_NOTES.md)
+- [Release notes, including the preserved v0.1.0 checkpoint](RELEASE_NOTES.md)
 - [Visual semantics and review checklist](docs/microscope-visual-semantics.md)
 - [Implementation limits and scaling path](docs/microscope-design.md)
 - [3Blue1Brown / Manim and other prior art](docs/prior-art.md)

@@ -836,3 +836,58 @@ dialog a {
   font-weight: 400;
   margin: 3px 0;
 }
+.view-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 18px 0;
+}
+.view-actions button {
+  background: #15272d;
+  color: #b8d7cf;
+  border: 1px solid #46645f55;
+  border-radius: 4px;
+  padding: 6px 9px;
+  font-size: 10px;
+}
+.view-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+#link-status {
+  font:
+    10px/1.6 "IBM Plex Mono",
+    monospace;
+  color: #a5c9ba;
+  padding: 0 18px;
+}
+#link-status:not(:empty) {
+  padding-top: 9px;
+}
+#link-status input {
+  width: 100%;
+  font:
+    10px "IBM Plex Mono",
+    monospace;
+  background: #081219;
+  border: 1px solid #708f8155;
+  color: #cfebe0;
+  padding: 7px;
+}
+.source-note {
+  font-size: 10px;
+  line-height: 1.65;
+  color: #7d9896;
+  margin: 12px 0 0;
+  overflow-wrap: anywhere;
+}
+.header-right select {
+  max-width: 250px;
+}
+@media (max-width: 800px) {
+  .header-right select {
+    max-width: 170px;
+  }
+  .view-actions {
+    padding: 10px 12px 0;
+  }
+}

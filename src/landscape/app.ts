@@ -3,14 +3,160 @@ import type { Entity, ModelIR, Tensor, Edge } from "../types";
 import { countLabel, shapeLabel } from "../lib/model-ir.js";
 import { compileLandscape, type Landscape, type BlockLayout } from "./layout";
 import { LandscapeRenderer } from "./renderer";
+import {
+  LatestRequest,
+  isModelKey,
+  modelCatalog,
+  parseViewURL,
+  sameView,
+  viewURL,
+  type ModelKey,
+  type ViewMode,
+  type ViewState,
+} from "./navigation";
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 let landscape: Landscape,
   renderer: LandscapeRenderer,
   selected: Entity | null = null,
   currentBlock: BlockLayout | null = null,
-  currentMode = "model",
-  loading = 0;
+  currentMode: ViewMode = "model";
+let ready = false,
+  restoringView = false,
+  recordScheduled = false;
+let currentModel: ModelKey = "deepseek4";
+const requests = new LatestRequest();
+const visited: ViewState[] = [];
+function viewState(): ViewState {
+  return {
+    model: currentModel,
+    entity:
+      selected?.id ??
+      (currentMode !== "model" ? (currentBlock?.id ?? null) : null),
+    mode: currentMode,
+  };
+}
+function updateShareURL(state = viewState()) {
+  window.history.replaceState(null, "", viewURL(window.location.href, state));
+  const back = document.getElementById("back-view") as HTMLButtonElement | null;
+  if (back) back.disabled = visited.length < 2;
+  const status = document.getElementById("link-status");
+  if (status) status.replaceChildren();
+}
+function recordView() {
+  if (!ready || restoringView || recordScheduled) return;
+  recordScheduled = true;
+  queueMicrotask(() => {
+    recordScheduled = false;
+    if (!ready || restoringView) return;
+    const state = viewState();
+    if (!visited.length || !sameView(visited[visited.length - 1], state)) {
+      visited.push(state);
+      if (visited.length > 64) visited.shift();
+    }
+    updateShareURL(state);
+  });
+}
+function scopeLabel(): string {
+  const meta = landscape.model.metadata ?? {};
+  return String(meta.scopeLabel ?? meta.scope ?? "Architecture package");
+}
+function scopeNote(): string {
+  const meta = landscape.model.metadata ?? {};
+  return String(
+    meta.scopeNote ??
+      "The declared decoder and any bundled auxiliary modules share this landscape. Zoom into a block to resolve its operations and connections.",
+  );
+}
+function hasExperts(block = currentBlock): boolean {
+  if (!block)
+    return landscape.model.entities.some((e) => e.kind === "ExpertCluster");
+  return landscape.glyphs.some(
+    (g) =>
+      g.blockId === block.id && (g.kind === "experts" || g.kind === "router"),
+  );
+}
+function feedForwardLabel(block = currentBlock): string {
+  return hasExperts(block) ? "Experts" : "Feed-forward";
+}
+function setReady(value: boolean) {
+  ready = value;
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    "[data-view], #previous-block, #next-block, #reset-view, #copy-link, #face-on, #selection-actions button, #connection-list button",
+  ))
+    button.disabled =
+      !value ||
+      (!!landscape &&
+        !landscape.blocks.length &&
+        button.dataset.view !== "model");
+  $<HTMLInputElement>("search").disabled = !value;
+}
+function clearSearch() {
+  clearTimeout(searchTimer);
+  $("search-results").replaceChildren();
+  $<HTMLInputElement>("search").value = "";
+}
+function safeNavigate(mode: string, blockId?: string) {
+  if (!ready || (!landscape.blocks.length && mode !== "model")) return;
+  renderer.navigate(mode, blockId);
+  if (mode === "model") overviewFacts();
+}
+function applyView(state: ViewState) {
+  restoringView = true;
+  try {
+    if (state.entity && landscape.index.entities.has(state.entity)) {
+      if (state.mode === "model") renderer.fitModel();
+      const block = nearestBlock(state.entity);
+      if (state.mode !== "model" && block)
+        renderer.navigate(
+          state.mode === "detail" ? "block" : state.mode,
+          block.id,
+        );
+      inspect(state.entity);
+      if (state.mode === "detail") renderer.approach(state.entity);
+    } else {
+      renderer.fitModel();
+      overviewFacts();
+      if (state.entity)
+        showLinkStatus(
+          "That component is absent from this package; showing the model overview.",
+        );
+    }
+  } finally {
+    restoringView = false;
+  }
+}
+function showLinkStatus(message: string) {
+  const host = document.getElementById("link-status");
+  if (host) host.textContent = message;
+}
+async function copyViewLink() {
+  if (!ready) return;
+  const href = viewURL(window.location.href, viewState());
+  try {
+    if (!navigator.clipboard?.writeText)
+      throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(href);
+    showLinkStatus(
+      "View link copied. It opens this model and component; camera orbit is not recorded.",
+    );
+  } catch {
+    let host = document.getElementById("link-status");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "link-status";
+      $("selection-actions").after(host);
+    }
+    host.replaceChildren(document.createTextNode("Copy this view link:"));
+    const input = document.createElement("input");
+    input.readOnly = true;
+    input.value = href;
+    input.setAttribute("aria-label", "Shareable model and component URL");
+    host.append(input);
+    input.focus();
+    input.select();
+  }
+}
 const replaceText = (id: string, text: string) => {
   $(id).textContent = text;
 };
@@ -115,6 +261,14 @@ function describe(e: Entity): string {
   switch (e.kind) {
     case "TransformerBlock":
       return "A complete decoder block. Residual streams pass through attention and feed-forward branches while retaining their place in the full model.";
+    case "LinearAttention":
+      return "A recurrent attention branch updates its declared state rather than materializing a full sequence-by-sequence attention matrix. State shape and dependencies identify what is retained.";
+    case "RecurrentState":
+      return "This memory belongs to a recurrent computation. Its declared shape describes retained coordinates; this package does not contain runtime state values.";
+    case "CausalConvolution":
+      return "A causal convolution combines current and earlier positions within its declared kernel. It does not read future positions.";
+    case "Gate":
+      return "A declared gate modulates the branch identified by its inputs and outputs. No gate activation is inferred from the diagram.";
     case "CompressedAttention":
       return Number(a.compressionRatio) === 0
         ? "Query heads read uncompressed key/value memory. This attention module has no compressed-history branch."
@@ -256,6 +410,7 @@ function connectionLens(selectedEntity: Entity) {
   }
 }
 function inspect(id: string) {
+  if (!landscape || !ready) return;
   const e = landscape.index.entities.get(id) as Entity | undefined;
   if (!e) return;
   selected = e;
@@ -276,6 +431,26 @@ function inspect(id: string) {
   if (a.heads !== undefined || a.queryHeads !== undefined)
     fact("Query heads", a.heads ?? a.queryHeads);
   if (a.headDim !== undefined) fact("Head width", a.headDim);
+  if (a.attentionPattern !== undefined)
+    fact("Attention pattern", a.attentionPattern);
+  if (a.positionEncoding !== undefined)
+    fact("Position encoding", a.positionEncoding);
+  if (a.chunkSize !== undefined) fact("Chunk size", a.chunkSize);
+  if (a.queryKeyNormalization !== undefined)
+    fact("Q/K normalization", a.queryKeyNormalization);
+  if (a.queryPreprocessing !== undefined)
+    fact("Query preprocessing", a.queryPreprocessing);
+  for (const [key, label] of [
+    ["keyHeads", "Key heads"],
+    ["valueHeads", "Value heads"],
+    ["kvHeads", "KV heads"],
+    ["keyHeadDim", "Key head width"],
+    ["valueHeadDim", "Value head width"],
+    ["convKernel", "Causal kernel width"],
+  ] as const)
+    if (a[key] !== undefined) fact(label, a[key]);
+  if (Array.isArray(a.stateShape))
+    fact("State shape", a.stateShape.join(" × "));
   if (a.localWindow !== undefined) fact("Local window", a.localWindow);
   if (a.compressionRatio !== undefined)
     fact("Sequence compression", compressionLabel(a.compressionRatio));
@@ -301,12 +476,33 @@ function inspect(id: string) {
           dtype?: string;
           shape?: (number | string)[];
           encoding?: string;
+          checkpointTensor?: string;
+          sourceTensor?: string;
+          sourceShape?: (number | string)[];
+          mapping?: string;
+          offset?: number;
+          checkpointShape?: (number | string)[];
+          offsetElements?: number | string;
         };
       }
     ).storage;
     if (storage?.dtype) fact("Stored dtype", storage.dtype);
     if (storage?.shape && storage.shape.join(",") !== t.shape.join(","))
       fact("Packed storage shape", shapeLabel(storage.shape));
+    if (storage?.checkpointTensor || storage?.sourceTensor)
+      fact(
+        "Checkpoint tensor",
+        storage.checkpointTensor ?? storage.sourceTensor,
+      );
+    if (storage?.checkpointShape || storage?.sourceShape)
+      fact(
+        "Checkpoint shape",
+        shapeLabel(storage.checkpointShape ?? storage.sourceShape),
+      );
+    if (storage?.mapping) fact("Logical → stored indices", storage.mapping);
+    if (storage?.offset !== undefined) fact("Partition offset", storage.offset);
+    if (storage?.offsetElements !== undefined)
+      fact("Checkpoint slice offset", storage.offsetElements);
     fact("Tensor role", t.role);
     if (t.shape.every((s) => typeof s === "number")) selectedTensor(t);
   }
@@ -314,8 +510,10 @@ function inspect(id: string) {
   $("formula").hidden = !formula;
   if (formula) replaceText("formula", formula);
   if (e.kind === "TransformerBlock") {
-    action("Open attention", () => renderer.navigate("attention", e.id));
-    action("Open experts", () => renderer.navigate("experts", e.id));
+    action("Open attention", () => safeNavigate("attention", e.id));
+    action(`Open ${feedForwardLabel(nearestBlock(e.id)).toLowerCase()}`, () =>
+      safeNavigate("experts", e.id),
+    );
   } else action("Approach component", () => renderer.approach(e.id));
   const kids = children(e.id).filter(
     (e) =>
@@ -368,6 +566,7 @@ function inspect(id: string) {
   if (currentBlock) {
     updatePosition(currentBlock.id, currentMode);
   }
+  recordView();
 }
 function overviewFacts() {
   selected = null;
@@ -376,12 +575,9 @@ function overviewFacts() {
     connections.replaceChildren();
     connections.hidden = true;
   }
-  replaceText("selection-kind", "COMPLETE ARCHITECTURE");
+  replaceText("selection-kind", scopeLabel().toUpperCase());
   replaceText("selection-title", "Follow the computation.");
-  replaceText(
-    "selection-description",
-    "The whole decoder is unfolded here. Scroll into any block; its summaries resolve into projections, memory paths, routers and individual experts.",
-  );
+  replaceText("selection-description", scopeNote());
   $("selection-facts").replaceChildren();
   $("selection-actions").replaceChildren();
   $("formula").hidden = true;
@@ -389,19 +585,29 @@ function overviewFacts() {
   fact("Core blocks", landscape.blocks.filter((b) => !b.auxiliary).length);
   fact("Auxiliary blocks", landscape.blocks.filter((b) => b.auxiliary).length);
   fact(
-    "Unique parameters",
+    String(
+      landscape.model.metadata?.parameterCountLabel ?? "Package parameters",
+    ),
     landscape.index.parameterCount(landscape.model.rootId)?.toLocaleString(),
   );
   fact("Addressable tensors", landscape.model.tensors.length);
+  fact("Source evidence", landscape.model.source.evidence);
+  fact("Scope", scopeLabel());
   fact("Metadata package", "No full model weights");
-  action("Enter first block", () =>
-    renderer.navigate("block", landscape.blocks[0].id),
-  );
+  const sourceNote = document.createElement("p");
+  sourceNote.className = "source-note";
+  sourceNote.textContent =
+    landscape.model.source.notes ?? landscape.model.source.kind;
+  $("selection-facts").append(sourceNote);
+  const first =
+    landscape.blocks.find((b) => !b.auxiliary) ?? landscape.blocks[0];
+  if (first) action("Enter first block", () => safeNavigate("block", first.id));
   const aux = landscape.blocks.find((b) => b.auxiliary);
-  if (aux) action("Auxiliary module", () => renderer.navigate("block", aux.id));
+  if (aux) action("Auxiliary module", () => safeNavigate("block", aux.id));
+  recordView();
 }
 function updatePosition(id: string | null, mode: string) {
-  currentMode = mode;
+  currentMode = mode as ViewMode;
   if (id)
     currentBlock = landscape.blocks.find((b) => b.id === id) ?? currentBlock;
   const b = currentBlock;
@@ -422,6 +628,11 @@ function updatePosition(id: string | null, mode: string) {
   title.style.fontSize = mode === "model" ? "" : "30px";
   $("map-description").hidden = mode !== "model";
   $("title-facts").hidden = mode !== "model";
+  const feedForwardButton = document.querySelector<HTMLButtonElement>(
+    '[data-view="experts"]',
+  );
+  if (feedForwardButton) feedForwardButton.textContent = feedForwardLabel();
+  recordView();
 }
 function navigation() {
   const map = $("block-map");
@@ -434,34 +645,29 @@ function navigation() {
     const entity = landscape.index.entities.get(block.id);
     if (Number(entity?.attrs?.compressionRatio) === 4) b.classList.add("csa");
     b.addEventListener("click", () =>
-      renderer.navigate(
-        currentMode === "model" ? "block" : currentMode,
-        block.id,
-      ),
+      safeNavigate(currentMode === "model" ? "block" : currentMode, block.id),
     );
     map.append(b);
   }
   for (const el of document.querySelectorAll<HTMLButtonElement>("[data-view]"))
-    el.onclick = () => {
-      renderer.navigate(el.dataset.view!, currentBlock?.id);
-      if (el.dataset.view === "model") overviewFacts();
-    };
-  $("reset-view").onclick = () => {
-    renderer.fitModel();
-    overviewFacts();
-  };
+    el.onclick = () => safeNavigate(el.dataset.view!, currentBlock?.id);
+  $("reset-view").onclick = () => safeNavigate("model");
   for (const [id, direction] of [
     ["previous-block", -1],
     ["next-block", 1],
   ] as const)
     $(id).onclick = () => {
-      const core = landscape.blocks.filter((b) => !b.auxiliary),
-        i = Math.max(
-          0,
-          core.findIndex((b) => b.id === currentBlock?.id),
-        );
-      renderer.navigate(
-        currentMode === "model" ? "block" : currentMode,
+      if (!ready) return;
+      const core = landscape.blocks.filter((b) => !b.auxiliary);
+      if (!core.length) return;
+      const i = Math.max(
+        0,
+        core.findIndex((b) => b.id === currentBlock?.id),
+      );
+      safeNavigate(
+        currentMode === "model" || currentMode === "detail"
+          ? "block"
+          : currentMode,
         core[(i + direction + core.length) % core.length].id,
       );
     };
@@ -469,14 +675,16 @@ function navigation() {
 let searchTimer: ReturnType<typeof setTimeout>;
 function search() {
   clearTimeout(searchTimer);
+  const source = landscape;
   searchTimer = setTimeout(() => {
+    if (!ready || landscape !== source) return;
     const query = $<HTMLInputElement>("search").value.toLowerCase().trim();
     const host = $("search-results");
     host.replaceChildren();
     if (query.length < 2) return;
     const terms = query.split(/\s+/);
     let found = 0;
-    for (const e of landscape.model.entities) {
+    for (const e of source.model.entities) {
       if (!terms.every((t) => (e.id + " " + e.label).toLowerCase().includes(t)))
         continue;
       const b = document.createElement("button");
@@ -485,6 +693,7 @@ function search() {
       s.textContent = e.id;
       b.append(s);
       b.addEventListener("click", () => {
+        if (!ready || landscape !== source) return;
         inspect(e.id);
         renderer.approach(e.id);
       });
@@ -494,36 +703,62 @@ function search() {
     if (!found) host.textContent = "No matching components.";
   }, 160);
 }
-async function load(name: string) {
-  const request = ++loading;
-  $("loading").hidden = false;
+async function load(name: ModelKey, target?: ViewState, remember = true) {
+  const request = requests.begin();
+  clearSearch();
+  setReady(false);
+  const overlay = $("loading");
+  overlay.hidden = false;
+  const line = document.createElement("span");
+  line.className = "loader-line";
+  const title = document.createElement("strong");
+  title.textContent = "Unfolding the architecture";
+  const detail = document.createElement("span");
+  detail.textContent = "Loading the compact structural package.";
+  overlay.replaceChildren(line, title, detail);
   try {
-    const res = await fetch(`/models/${name}.atlas.json.gz`);
+    const res = await fetch(`/models/${name}.atlas.json.gz`, {
+      signal: request.signal,
+    });
     if (!res.ok || !res.body)
       throw new Error(`Package unavailable (${res.status}).`);
     const ir: ModelIR = await new Response(
       res.body.pipeThrough(new DecompressionStream("gzip")),
     ).json();
-    if (request !== loading) return;
-    landscape = compileLandscape(ir);
-    currentBlock = landscape.blocks[0];
-    const nameParts = ir.name.split(" · ")[0].split("-");
-    $("map-title").replaceChildren();
+    if (!requests.isCurrent(request)) return;
+    const next = compileLandscape(ir);
+    if (!requests.isCurrent(request)) return;
+    landscape = next;
+    currentModel = name;
+    selected = null;
+    currentMode = "model";
+    currentBlock =
+      landscape.blocks.find((b) => !b.auxiliary) ?? landscape.blocks[0] ?? null;
+    $<HTMLSelectElement>("model-choice").value = name;
+    const displayName = ir.name.split(" · ")[0];
+    const separator = displayName.includes("-") ? "-" : " ";
+    const nameParts = displayName.split(separator);
     const first = document.createElement("span");
-    first.textContent = nameParts.shift() ?? ir.name;
-    const br = document.createElement("br"),
-      em = document.createElement("em");
-    em.textContent = nameParts.join("-") + ".";
-    $("map-title").append(first, br, em);
+    first.textContent = nameParts.shift() ?? displayName;
+    const em = document.createElement("em");
+    em.textContent = nameParts.join(separator) + ".";
+    $("map-title").replaceChildren(first, document.createElement("br"), em);
     replaceText(
       "map-eyebrow",
       "MODEL ARCHITECTURE / " +
         String(ir.metadata?.architecture ?? "TRANSFORMER").split(" · ")[0],
     );
+    replaceText(
+      "map-description",
+      scopeLabel() + ". One continuous landscape.",
+    );
     const facts = $("title-facts");
     facts.replaceChildren();
     for (const [label, value] of [
-      ["parameters", countLabel(landscape.index.parameterCount(ir.rootId))],
+      [
+        String(ir.metadata?.parameterCountLabel ?? "package parameters"),
+        countLabel(landscape.index.parameterCount(ir.rootId)),
+      ],
       ["core blocks", landscape.blocks.filter((b) => !b.auxiliary).length],
     ]) {
       const d = document.createElement("div"),
@@ -535,28 +770,74 @@ async function load(name: string) {
       facts.append(d);
     }
     navigation();
+    restoringView = true;
+    setReady(true);
     renderer.setScene(landscape);
     overviewFacts();
-    $("loading").hidden = true;
+    restoringView = false;
+    overlay.hidden = true;
+    if (target) applyView(target);
+    if (remember) recordView();
+    else updateShareURL();
+    return true;
   } catch (e) {
-    $("loading").replaceChildren();
+    if (!requests.isCurrent(request)) return;
+    restoringView = false;
+    overlay.replaceChildren();
     const strong = document.createElement("strong");
     strong.textContent = "The architecture could not load.";
     const p = document.createElement("span");
     p.textContent = e instanceof Error ? e.message : String(e);
-    $("loading").append(strong, p);
+    const retry = document.createElement("button");
+    retry.textContent = "Retry package";
+    retry.addEventListener("click", () => load(name, target, remember));
+    overlay.append(strong, p, retry);
+    if (landscape) {
+      const back = document.createElement("button");
+      back.textContent = "Return to current model";
+      back.addEventListener("click", () => {
+        overlay.hidden = true;
+        $<HTMLSelectElement>("model-choice").value = currentModel;
+        setReady(true);
+      });
+      overlay.append(back);
+    }
     console.error(e);
+    return false;
   }
 }
+
 try {
   renderer = new LandscapeRenderer($("canvas-host"), {
     select: inspect,
     position: updatePosition,
     stats: (s) => replaceText("stats", s),
   });
-  $<HTMLSelectElement>("model-choice").addEventListener("change", (e) =>
-    load((e.target as HTMLSelectElement).value),
+  const selector = $<HTMLSelectElement>("model-choice");
+  selector.replaceChildren(
+    ...modelCatalog.map((model) => {
+      const o = document.createElement("option");
+      o.value = model.key;
+      o.textContent = model.label;
+      return o;
+    }),
   );
+  selector.addEventListener("change", () => {
+    if (isModelKey(selector.value)) load(selector.value);
+  });
+  document.getElementById("copy-link")?.addEventListener("click", copyViewLink);
+  document.getElementById("back-view")?.addEventListener("click", async () => {
+    if (!ready || visited.length < 2) return;
+    const departed = visited.pop()!;
+    const previous = visited[visited.length - 1];
+    if (previous.model !== currentModel) {
+      const restored = await load(previous.model, previous, false);
+      if (!restored && currentModel === departed.model) visited.push(departed);
+    } else {
+      applyView(previous);
+      updateShareURL();
+    }
+  });
   $("search").addEventListener("input", search);
   $("about").onclick = () => $<HTMLDialogElement>("about-dialog").showModal();
   $("close-about").onclick = () => $<HTMLDialogElement>("about-dialog").close();
@@ -572,15 +853,29 @@ try {
     renderer.setFlat(active);
   };
   window.addEventListener("keydown", (e) => {
-    if ((e.target as HTMLElement).matches("input,select,textarea")) return;
+    if (
+      (e.target as HTMLElement).closest(
+        "input,select,textarea,[contenteditable=true]",
+      )
+    )
+      return;
+    if (!ready || $<HTMLDialogElement>("about-dialog").open) return;
+    if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      $("panel-body").hidden = false;
+      $("search").focus();
+      return;
+    }
     const modes = ["model", "block", "attention", "experts"];
     if (/^[1-4]$/.test(e.key)) {
-      renderer.navigate(modes[Number(e.key) - 1], currentBlock?.id);
-      if (e.key === "1") overviewFacts();
+      safeNavigate(modes[Number(e.key) - 1], currentBlock?.id);
     }
     if (e.key === "Escape") $<HTMLDialogElement>("about-dialog").close();
   });
-  load("deepseek4");
+  const initial = parseViewURL(window.location.href);
+  selector.value = initial.model;
+  setReady(false);
+  load(initial.model, initial);
 } catch (e) {
   $("loading").textContent =
     "WebGL2 is required to view the landscape. " + String(e);
