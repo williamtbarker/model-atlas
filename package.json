@@ -1,6 +1,6 @@
 {
   "name": "model-atlas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A numerical microscope and semantic architecture explorer for transformer models",
@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@types/three": "0.180.0",
+    "tsx": "4.20.5",
     "typescript": "5.9.2",
-    "vite": "7.1.5",
-    "tsx": "4.20.5"
+    "vite": "7.3.6"
   }
 }

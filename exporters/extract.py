@@ -15,6 +15,8 @@ import struct
 from pathlib import Path
 from .model_ir import Builder, validate, write_package
 from .bundled import gpt2, deepseek4, tiny_example, ROOT
+from .llama4 import llama4_maverick
+from .qwen35 import qwen35
 
 
 def tensor_catalog(tensors, name="Tensor catalog", notes=None):
@@ -244,6 +246,8 @@ def main():
             ("gpt2", gpt2),
             ("deepseek4", deepseek4),
             ("tiny", tiny_example),
+            ("llama4-maverick", llama4_maverick),
+            ("qwen35-397b", qwen35),
         ]:
             print(
                 json.dumps(

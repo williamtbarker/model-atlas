@@ -1,0 +1,27 @@
+{
+  "model": "Qwen/Qwen3.5-397B-A17B",
+  "revision": "8472618112abcbd45acbcdc58436aff4233c23f7",
+  "transformersRevision": "26600f6bb24199fa57eb72c811add2cc1f25f78c",
+  "configUrl": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/blob/8472618112abcbd45acbcdc58436aff4233c23f7/config.json",
+  "indexUrl": "https://huggingface.co/Qwen/Qwen3.5-397B-A17B/blob/8472618112abcbd45acbcdc58436aff4233c23f7/model.safetensors.index.json",
+  "modelingUrl": "https://github.com/huggingface/transformers/blob/26600f6bb24199fa57eb72c811add2cc1f25f78c/src/transformers/models/qwen3_5_moe/modeling_qwen3_5_moe.py",
+  "reviewedConstructors": [
+    "Qwen3_5MoeGatedDeltaNet",
+    "Qwen3_5MoeAttention",
+    "Qwen3_5MoeExperts",
+    "Qwen3_5MoeSparseMoeBlock",
+    "Qwen3_5MoeTopKRouter",
+    "Qwen3_5MoeRMSNorm",
+    "Qwen3_5MoeRMSNormGated",
+    "Qwen3_5MoeDecoderLayer",
+    "Qwen3_5MoeTextModel",
+    "Qwen3_5MoeForConditionalGeneration"
+  ],
+  "sha256": {
+    "config.json": "3ae7fa89c2f7d1354096418ddaf1331e9e0898a8ca11e804fb6dbaa087efb7da",
+    "model.safetensors.index.json": "407d6a184a29469034ad92bcfaa6b72b582f8ad6afcbfad18a38a1c59ed296f8",
+    "modeling_qwen3_5_moe.py": "e0b72b84f4d9a12edee4033bb627049efff17f57fade2f8b98ecb43a2f49387f"
+  },
+  "license": "Apache-2.0",
+  "method": "Configuration and constructor-derived structural metadata; scoped serialized tensor names reconciled against checkpoint index. No tensor headers or payload fetched."
+}

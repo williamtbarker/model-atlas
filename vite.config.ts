@@ -2,7 +2,11 @@ import { defineConfig } from "vite";
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { microscope: "index.html", architecture: "architecture.html" },
+      input: {
+        landscape: "index.html",
+        microscope: "microscope.html",
+        architecture: "architecture.html",
+      },
     },
   },
 });

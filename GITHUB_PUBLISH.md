@@ -1,76 +1,41 @@
-# Preserve this checkpoint on GitHub
+# Model Atlas on GitHub
 
-These instructions create a new public repository at
-`williamtbarker/model-atlas` and preserve this source as the annotated tag
-`v0.1.0`. They do not change an existing remote repository. Run them from a
-freshly extracted `model-atlas` folder.
+The public repository is https://github.com/williamtbarker/model-atlas.
+Version 0.2.0 brings the continuous landscape and four-model gallery to `main`.
+The original `v0.1.0` tag remains the preserved public checkpoint; do not move it
+or rerun the old repository-creation script.
 
-Git, Node.js 22.12+, and GitHub CLI (`gh`) are required. Check `gh auth status`;
-use `gh auth login` if needed. The commands below assume the authenticated account
-can create repositories under `williamtbarker`.
+## Fresh clone
 
 ```bash
-bash <<'BASH'
-set -euo pipefail
-
-test -f package.json
-test ! -e .git
-gh auth status
-
+git clone https://github.com/williamtbarker/model-atlas.git
+cd model-atlas
 npm ci
-npm test
-npm run build
-
-git init -b main
-git add .
-git commit -m "Release Model Atlas v0.1.0"
-
-gh repo create williamtbarker/model-atlas \
-  --public \
-  --source=. \
-  --remote=origin \
-  --push \
-  --disable-wiki \
-  --description "Interactive transformer computation and architecture explorer with numerical traces and semantic zoom."
-
-git tag -a v0.1.0 -m "First public experimental release"
-git push origin v0.1.0
-
-gh release create v0.1.0 \
-  --repo williamtbarker/model-atlas \
-  --verify-tag \
-  --prerelease \
-  --title "Model Atlas v0.1.0" \
-  --notes-file RELEASE_NOTES.md
-BASH
+npm run dev
 ```
 
-The existing `.gitignore` keeps `node_modules/`, `dist/`, virtual environments,
-and local deployment files out of Git. The source, fixtures, metadata packages,
-tests, and documentation are committed.
-
-Attach the supplied ZIP to the GitHub release so people can use the prebuilt
-viewer. If the download is in your Downloads folder:
+For an existing checkout with no uncommitted changes:
 
 ```bash
-gh release upload v0.1.0 "$HOME/Downloads/model-atlas-v0.1.0-github.zip" \
-  --repo williamtbarker/model-atlas
+git switch main
+git pull --ff-only
+npm ci
+npm run dev
 ```
 
-The command has no overwrite option; it preserves an existing release asset.
-Alternatively, upload the ZIP using the release's Edit page.
+Preserve local edits before changing branches. No Git initialization, repository
+creation, forced push or retagging is required.
 
-Keep the `v0.1.0` tag fixed. Continue development on `main` or a new branch:
+The supplied ZIP includes a production build and starts with `node serve.mjs`.
+A source clone needs `npm run build` before that command. Node 22.12+ is required.
 
-```bash
-git switch -c feat/visual-design
-```
+## Release history and validation
 
-The public version begins at 0.1.0. Earlier version labels in the validation
-record identify internal development checkpoints, not earlier GitHub releases.
+The project owner reviewed the previous landscape locally and authorized moving
+forward with the new model options. The additional packages and navigation
+changes have automated and source validation. They have not received fresh
+browser visual QA or a MacBook performance benchmark in this environment.
+`LANDSCAPE_REVIEW.md` records that distinction.
 
-Official command references:
-
-- https://cli.github.com/manual/gh_repo_create
-- https://cli.github.com/manual/gh_release_create
-- https://cli.github.com/manual/gh_release_upload
+Use a new version tag for a new release. Keep the original `v0.1.0` history
+intact; normal pull-request merging is sufficient to update `main`.
