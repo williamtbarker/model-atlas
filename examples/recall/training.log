@@ -1,0 +1,57 @@
+Directional gradient checks passed
+step   250 loss 0.80218 test 56.6017% elapsed 4.6s
+step   500 loss 0.77563 test 55.1948% elapsed 8.0s
+step   750 loss 0.50700 test 71.1039% elapsed 11.9s
+step  1000 loss 0.00229 test 100.0000% elapsed 15.4s
+step  1250 loss 0.00112 test 100.0000% elapsed 18.5s
+step  1500 loss 0.00094 test 100.0000% elapsed 21.6s
+step  1750 loss 0.00061 test 100.0000% elapsed 24.6s
+step  2000 loss 0.00052 test 100.0000% elapsed 27.6s
+step  2250 loss 0.00042 test 100.0000% elapsed 31.8s
+step  2500 loss 0.00038 test 100.0000% elapsed 35.5s
+step  2750 loss 0.00037 test 100.0000% elapsed 39.2s
+step  3000 loss 0.00031 test 100.0000% elapsed 42.6s
+{
+  "parameters": 4777,
+  "bytes": 4072017,
+  "metrics": {
+    "training": {
+      "examples": 3684,
+      "accuracy": 1.0,
+      "crossEntropy": 0.00033019342824411725,
+      "meanCorrectProbability": 0.9996698652170872
+    },
+    "heldOut": {
+      "examples": 924,
+      "accuracy": 1.0,
+      "crossEntropy": 0.00035080335195281217,
+      "meanCorrectProbability": 0.9996493143909061
+    },
+    "headAblations": {
+      "L0H0": {
+        "examples": 924,
+        "accuracy": 0.6168831168831169,
+        "crossEntropy": 2.0750491764545025,
+        "meanCorrectProbability": 0.6127212762255411
+      },
+      "L0H1": {
+        "examples": 924,
+        "accuracy": 0.54004329004329,
+        "crossEntropy": 2.9011424516668676,
+        "meanCorrectProbability": 0.5239051748289935
+      },
+      "L1H0": {
+        "examples": 924,
+        "accuracy": 0.47943722943722944,
+        "crossEntropy": 2.636038536539096,
+        "meanCorrectProbability": 0.4781173755680135
+      },
+      "L1H1": {
+        "examples": 924,
+        "accuracy": 0.9989177489177489,
+        "crossEntropy": 0.015547738644760448,
+        "meanCorrectProbability": 0.9865639120004468
+      }
+    }
+  }
+}

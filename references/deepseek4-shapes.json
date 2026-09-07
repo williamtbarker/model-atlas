@@ -1,0 +1,2482 @@
+{
+  "model_id": "deepseek-ai/DeepSeek-V4-Pro",
+  "revision": "b5968e9190ef611bbf34a7229255be88a0e937c1",
+  "source_urls": {
+    "config.json": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/resolve/b5968e9190ef611bbf34a7229255be88a0e937c1/config.json",
+    "inference/model.py": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/resolve/b5968e9190ef611bbf34a7229255be88a0e937c1/inference/model.py",
+    "inference/config.json": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/resolve/b5968e9190ef611bbf34a7229255be88a0e937c1/inference/config.json",
+    "inference/convert.py": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/resolve/b5968e9190ef611bbf34a7229255be88a0e937c1/inference/convert.py",
+    "model.safetensors.index.json": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro/resolve/b5968e9190ef611bbf34a7229255be88a0e937c1/model.safetensors.index.json"
+  },
+  "config": {
+    "architectures": [
+      "DeepseekV4ForCausalLM"
+    ],
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 0,
+    "eos_token_id": 1,
+    "expert_dtype": "fp4",
+    "hc_eps": 1e-06,
+    "hc_mult": 4,
+    "hc_sinkhorn_iters": 20,
+    "head_dim": 512,
+    "hidden_act": "silu",
+    "hidden_size": 7168,
+    "index_head_dim": 128,
+    "index_n_heads": 64,
+    "index_topk": 1024,
+    "initializer_range": 0.02,
+    "max_position_embeddings": 1048576,
+    "model_type": "deepseek_v4",
+    "moe_intermediate_size": 3072,
+    "n_routed_experts": 384,
+    "n_shared_experts": 1,
+    "norm_topk_prob": true,
+    "num_attention_heads": 128,
+    "num_experts_per_tok": 6,
+    "num_hidden_layers": 61,
+    "num_hash_layers": 3,
+    "num_key_value_heads": 1,
+    "num_nextn_predict_layers": 1,
+    "o_groups": 16,
+    "o_lora_rank": 1024,
+    "q_lora_rank": 1536,
+    "qk_rope_head_dim": 64,
+    "quantization_config": {
+      "activation_scheme": "dynamic",
+      "fmt": "e4m3",
+      "quant_method": "fp8",
+      "scale_fmt": "ue8m0",
+      "weight_block_size": [
+        128,
+        128
+      ]
+    },
+    "rms_norm_eps": 1e-06,
+    "rope_scaling": {
+      "beta_fast": 32,
+      "beta_slow": 1,
+      "factor": 16,
+      "original_max_position_embeddings": 65536,
+      "type": "yarn"
+    },
+    "rope_theta": 10000,
+    "routed_scaling_factor": 2.5,
+    "scoring_func": "sqrtsoftplus",
+    "sliding_window": 128,
+    "swiglu_limit": 10.0,
+    "tie_word_embeddings": false,
+    "topk_method": "noaux_tc",
+    "torch_dtype": "bfloat16",
+    "transformers_version": "4.57.1",
+    "use_cache": true,
+    "vocab_size": 129280,
+    "compress_rope_theta": 160000,
+    "compress_ratios": [
+      128,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      128,
+      4,
+      0
+    ]
+  },
+  "formula_templates": {
+    "symbols": {
+      "D": "hidden_size",
+      "H": "num_attention_heads",
+      "A": "head_dim",
+      "R": "q_lora_rank",
+      "G": "o_groups",
+      "O": "o_lora_rank",
+      "E": "n_routed_experts",
+      "I": "moe_intermediate_size",
+      "V": "vocab_size",
+      "K": "num_experts_per_tok",
+      "HC": "hc_mult",
+      "HD": "HC*D",
+      "M": "(2+HC)*HC",
+      "IH": "index_n_heads",
+      "IA": "index_head_dim",
+      "r": "compress_ratios[layer_id]",
+      "c": "2 if r==4 else 1"
+    },
+    "root": {
+      "embed.weight": [
+        "V",
+        "D"
+      ],
+      "head.weight": [
+        "V",
+        "D"
+      ],
+      "norm.weight": [
+        "D"
+      ],
+      "hc_head_fn": [
+        "HC",
+        "HD"
+      ],
+      "hc_head_base": [
+        "HC"
+      ],
+      "hc_head_scale": [
+        1
+      ]
+    },
+    "each_block": {
+      "hc_{attn,ffn}_fn": [
+        "M",
+        "HD"
+      ],
+      "hc_{attn,ffn}_base": [
+        "M"
+      ],
+      "hc_{attn,ffn}_scale": [
+        3
+      ],
+      "{attn,ffn}_norm.weight": [
+        "D"
+      ],
+      "attn.attn_sink": [
+        "H"
+      ],
+      "attn.wq_a.weight": [
+        "R",
+        "D"
+      ],
+      "attn.q_norm.weight": [
+        "R"
+      ],
+      "attn.wq_b.weight": [
+        "H*A",
+        "R"
+      ],
+      "attn.wkv.weight": [
+        "A",
+        "D"
+      ],
+      "attn.kv_norm.weight": [
+        "A"
+      ],
+      "attn.wo_a.weight": [
+        "G*O",
+        "H*A/G"
+      ],
+      "attn.wo_b.weight": [
+        "D",
+        "G*O"
+      ],
+      "ffn.gate.weight": [
+        "E",
+        "D"
+      ],
+      "ffn.gate.bias (layer_id>=num_hash_layers)": [
+        "E"
+      ],
+      "ffn.gate.tid2eid (layer_id<num_hash_layers)": [
+        "V",
+        "K"
+      ],
+      "ffn.experts.{0..E-1}.w1.weight": [
+        "I",
+        "D"
+      ],
+      "ffn.experts.{0..E-1}.w3.weight": [
+        "I",
+        "D"
+      ],
+      "ffn.experts.{0..E-1}.w2.weight": [
+        "D",
+        "I"
+      ],
+      "ffn.shared_experts.w1.weight": [
+        "I",
+        "D"
+      ],
+      "ffn.shared_experts.w3.weight": [
+        "I",
+        "D"
+      ],
+      "ffn.shared_experts.w2.weight": [
+        "D",
+        "I"
+      ]
+    },
+    "compressor_when_r_positive": {
+      "attn.compressor.ape": [
+        "r",
+        "c*A"
+      ],
+      "attn.compressor.{wkv,wgate}.weight": [
+        "c*A",
+        "D"
+      ],
+      "attn.compressor.norm.weight": [
+        "A"
+      ]
+    },
+    "indexer_when_r_equals_4": {
+      "attn.indexer.wq_b.weight": [
+        "IH*IA",
+        "R"
+      ],
+      "attn.indexer.weights_proj.weight": [
+        "IH",
+        "D"
+      ],
+      "attn.indexer.compressor.ape": [
+        "r",
+        "c*IA"
+      ],
+      "attn.indexer.compressor.{wkv,wgate}.weight": [
+        "c*IA",
+        "D"
+      ],
+      "attn.indexer.compressor.norm.weight": [
+        "IA"
+      ]
+    },
+    "mtp": {
+      "inherits": "all each_block tensors, layer_id=n_layers+mtp_id, r from compress_ratios[layer_id]",
+      "{e_proj,h_proj}.weight": [
+        "D",
+        "D"
+      ],
+      "{enorm,hnorm,norm}.weight": [
+        "D"
+      ],
+      "hc_head_fn": [
+        "HC",
+        "HD"
+      ],
+      "hc_head_base": [
+        "HC"
+      ],
+      "hc_head_scale": [
+        1
+      ],
+      "shared_storage": "embed/head aliases point to root; no additional embedding or vocabulary-head tensors"
+    },
+    "storage": "matrices are output,input; FP4 stored shape [out,in/2] I8 packing two nibbles; FP4 scale [out,in/32] F8_E8M0; FP8 weight shape unchanged with scale [ceil(out/128),ceil(in/128)] F8_E8M0"
+  },
+  "numeric_representatives": {
+    "root": [
+      {
+        "logical_shape": [
+          129280,
+          7168
+        ],
+        "stored_shape": [
+          129280,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 926679040,
+        "stored_elements": 926679040,
+        "name": "embed.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          129280,
+          7168
+        ],
+        "stored_shape": [
+          129280,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 926679040,
+        "stored_elements": 926679040,
+        "name": "head.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          28672
+        ],
+        "stored_shape": [
+          4,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 114688,
+        "stored_elements": 114688,
+        "name": "hc_head_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4
+        ],
+        "stored_shape": [
+          4
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 4,
+        "stored_elements": 4,
+        "name": "hc_head_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1
+        ],
+        "stored_shape": [
+          1
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 1,
+        "stored_elements": 1,
+        "name": "hc_head_scale",
+        "header_verified": true
+      }
+    ],
+    "layers.0.": [
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.0.hc_attn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "layers.0.hc_attn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "layers.0.hc_attn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.0.attn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.0.hc_ffn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "layers.0.hc_ffn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "layers.0.hc_ffn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.0.ffn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128
+        ],
+        "stored_shape": [
+          128
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 128,
+        "stored_elements": 128,
+        "name": "layers.0.attn.attn_sink",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536,
+          7168
+        ],
+        "stored_shape": [
+          1536,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 11010048,
+        "stored_elements": 11010048,
+        "name": "layers.0.attn.wq_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          12,
+          56
+        ],
+        "stored_shape": [
+          12,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 672,
+        "stored_elements": 672,
+        "name": "layers.0.attn.wq_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          65536,
+          1536
+        ],
+        "stored_shape": [
+          65536,
+          1536
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 100663296,
+        "stored_elements": 100663296,
+        "name": "layers.0.attn.wq_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          12
+        ],
+        "stored_shape": [
+          512,
+          12
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 6144,
+        "stored_elements": 6144,
+        "name": "layers.0.attn.wq_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          7168
+        ],
+        "stored_shape": [
+          512,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 3670016,
+        "stored_elements": 3670016,
+        "name": "layers.0.attn.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          56
+        ],
+        "stored_shape": [
+          4,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 224,
+        "stored_elements": 224,
+        "name": "layers.0.attn.wkv.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          16384,
+          4096
+        ],
+        "stored_shape": [
+          16384,
+          4096
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 67108864,
+        "stored_elements": 67108864,
+        "name": "layers.0.attn.wo_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128,
+          32
+        ],
+        "stored_shape": [
+          128,
+          32
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 4096,
+        "stored_elements": 4096,
+        "name": "layers.0.attn.wo_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          16384
+        ],
+        "stored_shape": [
+          7168,
+          16384
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 117440512,
+        "stored_elements": 117440512,
+        "name": "layers.0.attn.wo_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          128
+        ],
+        "stored_shape": [
+          56,
+          128
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.0.attn.wo_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536
+        ],
+        "stored_shape": [
+          1536
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 1536,
+        "stored_elements": 1536,
+        "name": "layers.0.attn.q_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512
+        ],
+        "stored_shape": [
+          512
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 512,
+        "stored_elements": 512,
+        "name": "layers.0.attn.kv_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128,
+          512
+        ],
+        "stored_shape": [
+          128,
+          512
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 65536,
+        "stored_elements": 65536,
+        "name": "layers.0.attn.compressor.ape",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          7168
+        ],
+        "stored_shape": [
+          512,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 3670016,
+        "stored_elements": 3670016,
+        "name": "layers.0.attn.compressor.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          7168
+        ],
+        "stored_shape": [
+          512,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 3670016,
+        "stored_elements": 3670016,
+        "name": "layers.0.attn.compressor.wgate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512
+        ],
+        "stored_shape": [
+          512
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 512,
+        "stored_elements": 512,
+        "name": "layers.0.attn.compressor.norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          384,
+          7168
+        ],
+        "stored_shape": [
+          384,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 2752512,
+        "stored_elements": 2752512,
+        "name": "layers.0.ffn.gate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          129280,
+          6
+        ],
+        "stored_shape": [
+          129280,
+          6
+        ],
+        "stored_dtype": "I64",
+        "category": "nontrainable_routing_table",
+        "logical_elements": 775680,
+        "stored_elements": 775680,
+        "name": "layers.0.ffn.gate.tid2eid",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.0.ffn.shared_experts.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.0.ffn.shared_experts.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.0.ffn.experts.0.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.0.ffn.experts.0.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          3072
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.0.ffn.shared_experts.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          24
+        ],
+        "stored_shape": [
+          56,
+          24
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.0.ffn.shared_experts.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          1536
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.0.ffn.experts.0.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          96
+        ],
+        "stored_shape": [
+          7168,
+          96
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.0.ffn.experts.0.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.0.ffn.shared_experts.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.0.ffn.shared_experts.w3.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.0.ffn.experts.0.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.0.ffn.experts.0.w3.scale",
+        "header_verified": true
+      }
+    ],
+    "layers.2.": [
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.2.hc_attn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "layers.2.hc_attn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "layers.2.hc_attn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.2.attn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.2.hc_ffn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "layers.2.hc_ffn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "layers.2.hc_ffn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.2.ffn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128
+        ],
+        "stored_shape": [
+          128
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 128,
+        "stored_elements": 128,
+        "name": "layers.2.attn.attn_sink",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536,
+          7168
+        ],
+        "stored_shape": [
+          1536,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 11010048,
+        "stored_elements": 11010048,
+        "name": "layers.2.attn.wq_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          12,
+          56
+        ],
+        "stored_shape": [
+          12,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 672,
+        "stored_elements": 672,
+        "name": "layers.2.attn.wq_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          65536,
+          1536
+        ],
+        "stored_shape": [
+          65536,
+          1536
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 100663296,
+        "stored_elements": 100663296,
+        "name": "layers.2.attn.wq_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          12
+        ],
+        "stored_shape": [
+          512,
+          12
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 6144,
+        "stored_elements": 6144,
+        "name": "layers.2.attn.wq_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          7168
+        ],
+        "stored_shape": [
+          512,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 3670016,
+        "stored_elements": 3670016,
+        "name": "layers.2.attn.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          56
+        ],
+        "stored_shape": [
+          4,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 224,
+        "stored_elements": 224,
+        "name": "layers.2.attn.wkv.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          16384,
+          4096
+        ],
+        "stored_shape": [
+          16384,
+          4096
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 67108864,
+        "stored_elements": 67108864,
+        "name": "layers.2.attn.wo_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128,
+          32
+        ],
+        "stored_shape": [
+          128,
+          32
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 4096,
+        "stored_elements": 4096,
+        "name": "layers.2.attn.wo_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          16384
+        ],
+        "stored_shape": [
+          7168,
+          16384
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 117440512,
+        "stored_elements": 117440512,
+        "name": "layers.2.attn.wo_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          128
+        ],
+        "stored_shape": [
+          56,
+          128
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "layers.2.attn.wo_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536
+        ],
+        "stored_shape": [
+          1536
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 1536,
+        "stored_elements": 1536,
+        "name": "layers.2.attn.q_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512
+        ],
+        "stored_shape": [
+          512
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 512,
+        "stored_elements": 512,
+        "name": "layers.2.attn.kv_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          1024
+        ],
+        "stored_shape": [
+          4,
+          1024
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 4096,
+        "stored_elements": 4096,
+        "name": "layers.2.attn.compressor.ape",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1024,
+          7168
+        ],
+        "stored_shape": [
+          1024,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7340032,
+        "stored_elements": 7340032,
+        "name": "layers.2.attn.compressor.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1024,
+          7168
+        ],
+        "stored_shape": [
+          1024,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7340032,
+        "stored_elements": 7340032,
+        "name": "layers.2.attn.compressor.wgate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512
+        ],
+        "stored_shape": [
+          512
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 512,
+        "stored_elements": 512,
+        "name": "layers.2.attn.compressor.norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          8192,
+          1536
+        ],
+        "stored_shape": [
+          8192,
+          1536
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 12582912,
+        "stored_elements": 12582912,
+        "name": "layers.2.attn.indexer.wq_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          64,
+          12
+        ],
+        "stored_shape": [
+          64,
+          12
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 768,
+        "stored_elements": 768,
+        "name": "layers.2.attn.indexer.wq_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          64,
+          7168
+        ],
+        "stored_shape": [
+          64,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 458752,
+        "stored_elements": 458752,
+        "name": "layers.2.attn.indexer.weights_proj.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          256
+        ],
+        "stored_shape": [
+          4,
+          256
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 1024,
+        "stored_elements": 1024,
+        "name": "layers.2.attn.indexer.compressor.ape",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          256,
+          7168
+        ],
+        "stored_shape": [
+          256,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 1835008,
+        "stored_elements": 1835008,
+        "name": "layers.2.attn.indexer.compressor.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          256,
+          7168
+        ],
+        "stored_shape": [
+          256,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 1835008,
+        "stored_elements": 1835008,
+        "name": "layers.2.attn.indexer.compressor.wgate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128
+        ],
+        "stored_shape": [
+          128
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 128,
+        "stored_elements": 128,
+        "name": "layers.2.attn.indexer.compressor.norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          384,
+          7168
+        ],
+        "stored_shape": [
+          384,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 2752512,
+        "stored_elements": 2752512,
+        "name": "layers.2.ffn.gate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          129280,
+          6
+        ],
+        "stored_shape": [
+          129280,
+          6
+        ],
+        "stored_dtype": "I64",
+        "category": "nontrainable_routing_table",
+        "logical_elements": 775680,
+        "stored_elements": 775680,
+        "name": "layers.2.ffn.gate.tid2eid",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.2.ffn.shared_experts.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.2.ffn.shared_experts.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.2.ffn.experts.0.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.2.ffn.experts.0.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          3072
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.2.ffn.shared_experts.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          24
+        ],
+        "stored_shape": [
+          56,
+          24
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.2.ffn.shared_experts.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          1536
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.2.ffn.experts.0.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          96
+        ],
+        "stored_shape": [
+          7168,
+          96
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.2.ffn.experts.0.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "layers.2.ffn.shared_experts.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "layers.2.ffn.shared_experts.w3.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "layers.2.ffn.experts.0.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "layers.2.ffn.experts.0.w3.scale",
+        "header_verified": true
+      }
+    ],
+    "mtp.0.": [
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "mtp.0.hc_attn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "mtp.0.hc_attn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "mtp.0.hc_attn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.attn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          28672
+        ],
+        "stored_shape": [
+          24,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "mtp.0.hc_ffn_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24
+        ],
+        "stored_shape": [
+          24
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 24,
+        "stored_elements": 24,
+        "name": "mtp.0.hc_ffn_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3
+        ],
+        "stored_shape": [
+          3
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 3,
+        "stored_elements": 3,
+        "name": "mtp.0.hc_ffn_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.ffn_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128
+        ],
+        "stored_shape": [
+          128
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 128,
+        "stored_elements": 128,
+        "name": "mtp.0.attn.attn_sink",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536,
+          7168
+        ],
+        "stored_shape": [
+          1536,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 11010048,
+        "stored_elements": 11010048,
+        "name": "mtp.0.attn.wq_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          12,
+          56
+        ],
+        "stored_shape": [
+          12,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 672,
+        "stored_elements": 672,
+        "name": "mtp.0.attn.wq_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          65536,
+          1536
+        ],
+        "stored_shape": [
+          65536,
+          1536
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 100663296,
+        "stored_elements": 100663296,
+        "name": "mtp.0.attn.wq_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          12
+        ],
+        "stored_shape": [
+          512,
+          12
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 6144,
+        "stored_elements": 6144,
+        "name": "mtp.0.attn.wq_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512,
+          7168
+        ],
+        "stored_shape": [
+          512,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 3670016,
+        "stored_elements": 3670016,
+        "name": "mtp.0.attn.wkv.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          56
+        ],
+        "stored_shape": [
+          4,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 224,
+        "stored_elements": 224,
+        "name": "mtp.0.attn.wkv.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          16384,
+          4096
+        ],
+        "stored_shape": [
+          16384,
+          4096
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 67108864,
+        "stored_elements": 67108864,
+        "name": "mtp.0.attn.wo_a.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          128,
+          32
+        ],
+        "stored_shape": [
+          128,
+          32
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 4096,
+        "stored_elements": 4096,
+        "name": "mtp.0.attn.wo_a.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          16384
+        ],
+        "stored_shape": [
+          7168,
+          16384
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 117440512,
+        "stored_elements": 117440512,
+        "name": "mtp.0.attn.wo_b.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          128
+        ],
+        "stored_shape": [
+          56,
+          128
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.attn.wo_b.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1536
+        ],
+        "stored_shape": [
+          1536
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 1536,
+        "stored_elements": 1536,
+        "name": "mtp.0.attn.q_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          512
+        ],
+        "stored_shape": [
+          512
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 512,
+        "stored_elements": 512,
+        "name": "mtp.0.attn.kv_norm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          384,
+          7168
+        ],
+        "stored_shape": [
+          384,
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 2752512,
+        "stored_elements": 2752512,
+        "name": "mtp.0.ffn.gate.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          384
+        ],
+        "stored_shape": [
+          384
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 384,
+        "stored_elements": 384,
+        "name": "mtp.0.ffn.gate.bias",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "mtp.0.ffn.shared_experts.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "mtp.0.ffn.shared_experts.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "mtp.0.ffn.experts.0.w1.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "mtp.0.ffn.experts.0.w1.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          3072
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "mtp.0.ffn.shared_experts.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          24
+        ],
+        "stored_shape": [
+          56,
+          24
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "mtp.0.ffn.shared_experts.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          3072
+        ],
+        "stored_shape": [
+          7168,
+          1536
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "mtp.0.ffn.experts.0.w2.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          96
+        ],
+        "stored_shape": [
+          7168,
+          96
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "mtp.0.ffn.experts.0.w2.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 22020096,
+        "name": "mtp.0.ffn.shared_experts.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          24,
+          56
+        ],
+        "stored_shape": [
+          24,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 1344,
+        "stored_elements": 1344,
+        "name": "mtp.0.ffn.shared_experts.w3.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          7168
+        ],
+        "stored_shape": [
+          3072,
+          3584
+        ],
+        "stored_dtype": "I8",
+        "category": "architecture_parameter",
+        "logical_elements": 22020096,
+        "stored_elements": 11010048,
+        "name": "mtp.0.ffn.experts.0.w3.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          3072,
+          224
+        ],
+        "stored_shape": [
+          3072,
+          224
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 688128,
+        "stored_elements": 688128,
+        "name": "mtp.0.ffn.experts.0.w3.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4,
+          28672
+        ],
+        "stored_shape": [
+          4,
+          28672
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 114688,
+        "stored_elements": 114688,
+        "name": "mtp.0.hc_head_fn",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          4
+        ],
+        "stored_shape": [
+          4
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 4,
+        "stored_elements": 4,
+        "name": "mtp.0.hc_head_base",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          1
+        ],
+        "stored_shape": [
+          1
+        ],
+        "stored_dtype": "F32",
+        "category": "architecture_parameter",
+        "logical_elements": 1,
+        "stored_elements": 1,
+        "name": "mtp.0.hc_head_scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          7168
+        ],
+        "stored_shape": [
+          7168,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 51380224,
+        "stored_elements": 51380224,
+        "name": "mtp.0.e_proj.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          56
+        ],
+        "stored_shape": [
+          56,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 3136,
+        "stored_elements": 3136,
+        "name": "mtp.0.e_proj.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168,
+          7168
+        ],
+        "stored_shape": [
+          7168,
+          7168
+        ],
+        "stored_dtype": "F8_E4M3",
+        "category": "architecture_parameter",
+        "logical_elements": 51380224,
+        "stored_elements": 51380224,
+        "name": "mtp.0.h_proj.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          56,
+          56
+        ],
+        "stored_shape": [
+          56,
+          56
+        ],
+        "stored_dtype": "F8_E8M0",
+        "category": "quantization_scale",
+        "logical_elements": 3136,
+        "stored_elements": 3136,
+        "name": "mtp.0.h_proj.scale",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.enorm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.hnorm.weight",
+        "header_verified": true
+      },
+      {
+        "logical_shape": [
+          7168
+        ],
+        "stored_shape": [
+          7168
+        ],
+        "stored_dtype": "BF16",
+        "category": "architecture_parameter",
+        "logical_elements": 7168,
+        "stored_elements": 7168,
+        "name": "mtp.0.norm.weight",
+        "header_verified": true
+      }
+    ]
+  },
+  "reconciliation": {
+    "counts": {
+      "architecture_parameter": 1598837347742,
+      "quantization_scale": 49150268416,
+      "nontrainable_routing_table": 2327040,
+      "total_stored_tensor_bytes": 864704792696,
+      "core_architecture_parameters_excluding_mtp": 1572997201763,
+      "mtp_additional_architecture_parameters": 25840145979,
+      "hf_reported_logical_total": 1598839674782,
+      "logical_architecture_plus_tables": 1598839674782
+    },
+    "entry_counts": {
+      "architecture_parameter": 73161,
+      "quantization_scale": 71952,
+      "nontrainable_routing_table": 3
+    },
+    "stored_elements_by_dtype": {
+      "BF16": 2816899328,
+      "F32": 87776414,
+      "F8_E4M3": 23169335296,
+      "F8_E8M0": 49150268416,
+      "I64": 2327040,
+      "I8": 786381668352
+    },
+    "published_index_entries": 145116,
+    "published_index_total_size": 864704792696,
+    "all_index_names_covered": true,
+    "missing_names": [],
+    "extra_names": [],
+    "sampled_header_entries_checked": 7030,
+    "sampled_header_mismatch_count": 0,
+    "sampled_header_errors": [],
+    "all_bytes_reconcile": true
+  },
+  "scope_notes": [
+    "Logical unsharded shapes: actual TP rank-local tensors have shard dimensions; expert parallel shards contain subsets of experts.",
+    "Architecture parameter count excludes quantization scales and nontrainable token-ID routing tables. Gate correction bias is included because it is a declared model parameter; not claiming ordinary gradient optimization for it.",
+    "Root embeds and output weights are untied; MTP shares their storage with root.",
+    "Sampled shard headers cover root, HCA+hash, CSA+hash and complete MTP. Remaining layer shapes derived from verified constructors; complete names reconcile against all 145116 index entries.",
+    "Source inference code converts wo_a to BF16 and norms/compressors to FP32 for convenience; published checkpoint dtypes, not runtime casts, are recorded here.",
+    "Persistent=False KV caches, compressor state, positional frequency tables and masks are runtime buffers, not trainable tensors and not in checkpoint index.",
+    "Published index total_size counts actual packed data bytes and scales; it excludes safetensors file headers.",
+    "No weight value payloads were downloaded. Five shard headers totaled under 0.8 MB."
+  ],
+  "pinned_source_sha256": {
+    "deepseek4-model.py": {
+      "sha256": "ce962f1face79d4f633d36436576214057a7e11443c9789935e1deb5c6cd1d71",
+      "identical_to_reviewed_source": true
+    },
+    "deepseek4-config.json": {
+      "sha256": "5fe4568daee51c208cb8a79538eaeda090ae011ade1dee2c386aa95f569c810e",
+      "identical_to_reviewed_source": true
+    }
+  }
+}

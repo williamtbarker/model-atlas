@@ -1,0 +1,29 @@
+{
+  "name": "model-atlas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A numerical microscope and semantic architecture explorer for transformer models",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:python": "python3 -m unittest discover -s tests -p \"test_*.py\"",
+    "start": "node serve.mjs",
+    "test:trace": "python3 -m unittest discover -s examples/recall -p test_trace.py"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.180.0",
+    "typescript": "5.9.2",
+    "vite": "7.1.5",
+    "tsx": "4.20.5"
+  }
+}

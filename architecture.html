@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09131e" />
+    <meta
+      name="description"
+      content="Explore open model architectures from an entire network down to an individual tensor coordinate. No inference or model weights required."
+    />
+    <title>Model Atlas — Architecture Explorer</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./"
+        ><span class="brand-mark" aria-hidden="true">▦</span> MODEL ATLAS
+        <span class="version">/ 01</span></a
+      >
+      <div class="model-select">
+        <label for="model">MODEL</label
+        ><select id="model">
+          <option value="deepseek4">DeepSeek-V4-Pro · 2026</option>
+          <option value="gpt2">GPT-2 · Reference</option>
+          <option value="tiny">Computed attention example</option>
+        </select>
+      </div>
+      <div class="header-actions">
+        <button id="import">Import package</button
+        ><input
+          id="file"
+          type="file"
+          accept=".json,.gz,.atlas,.safetensors"
+          hidden
+        /><button
+          id="help"
+          class="icon-button"
+          aria-label="Instructions and visual meanings"
+        >
+          ?
+        </button>
+      </div>
+    </header>
+    <main class="workspace">
+      <aside class="navigator">
+        <div class="section-label">
+          MODEL INDEX
+          <button id="root" title="Return to whole model">
+            ↖ Whole model
+          </button>
+        </div>
+        <h1 id="model-title">Loading architecture…</h1>
+        <p id="model-description" class="muted">
+          Precomputed structure. No inference required.
+        </p>
+        <div class="summary">
+          <div>
+            <strong id="params">—</strong><span>logical parameters</span>
+          </div>
+          <div><strong id="layers">—</strong><span>core blocks</span></div>
+        </div>
+        <div class="scope-heading">
+          <span id="list-title">Components</span
+          ><span id="list-count" class="muted"></span>
+        </div>
+        <input
+          id="search"
+          type="search"
+          placeholder="Find any component…"
+          aria-label="Search all model components"
+        />
+        <div id="tree" class="tree" aria-label="Model components"></div>
+        <div id="pagination" class="pagination">
+          <button id="prev-page" aria-label="Previous component page">←</button
+          ><span id="page-label"></span
+          ><button id="next-page" aria-label="Next component page">→</button>
+        </div>
+        <div class="navigator-bottom">
+          <span class="evidence-tag" id="evidence">STRUCTURAL PACKAGE</span>
+          <p>
+            Full architecture, bounded view.<br />Weights stay outside the
+            viewer.
+          </p>
+          <button id="export">Export ModelIR</button>
+        </div>
+      </aside>
+      <section class="viewport" aria-label="Architecture viewport">
+        <nav
+          id="breadcrumbs"
+          class="breadcrumbs"
+          aria-label="Architecture path"
+        ></nav>
+        <div id="scene"></div>
+        <div id="loading" class="loading" role="status">
+          <span class="loading-mark">▦</span><strong>Opening the atlas</strong
+          ><span id="load-message">Reading structural metadata…</span>
+        </div>
+        <div class="viewport-heading">
+          <span class="section-label" id="scope-kind">ARCHITECTURE</span>
+          <h2 id="scope-title"></h2>
+          <p id="scope-caption"></p>
+        </div>
+        <div class="view-tools">
+          <button id="back" title="Parent scope (Backspace)">↑ Parent</button
+          ><button id="fit" title="Fit current view (F)">Fit</button
+          ><button id="planar" aria-pressed="false">2D</button
+          ><button id="autozoom" aria-pressed="true">Semantic zoom</button>
+        </div>
+        <div class="legend">
+          <span><i style="--swatch: #67b8df"></i>Attention</span
+          ><span><i style="--swatch: #71c7b5"></i>Parameters</span
+          ><span><i style="--swatch: #c193d4"></i>Experts / MLP</span
+          ><span><i style="--swatch: #dfa169"></i>Residual mixing</span>
+        </div>
+        <div class="viewport-bottom">
+          <span id="render-stats">128-object budget</span
+          ><button id="lab-open">
+            Explore the arithmetic <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div id="toast" role="status" aria-live="polite" hidden></div>
+      </section>
+      <aside class="inspector" aria-label="Selected component details">
+        <div class="section-label">
+          COMPONENT INSPECTOR <span id="selected-kind"></span>
+        </div>
+        <h2 id="selected-title">Select a component</h2>
+        <p id="selected-id" class="path"></p>
+        <div class="inspect-actions">
+          <button id="enter" class="primary">Enter component ↗</button
+          ><button id="focus">Focus</button>
+        </div>
+        <div id="selected-details"></div>
+        <section id="tensor-inspector" hidden>
+          <div class="rule-label">TENSOR → TILE → SCALAR</div>
+          <label for="coordinates"
+            >Coordinate / tile origin
+            <span class="muted">zero-based</span></label
+          >
+          <form id="coordinate-form">
+            <input
+              id="coordinates"
+              placeholder="0, 0"
+              autocomplete="off"
+            /><button class="primary" type="submit">Go</button>
+          </form>
+          <p id="tensor-note" class="muted"></p>
+          <div id="tensor-grid" class="tensor-grid"></div>
+          <div class="tile-nav">
+            <button id="tile-left">← Columns</button
+            ><button id="tile-right">Columns →</button>
+          </div>
+          <div id="scalar" class="scalar">
+            <span>SELECTED COORDINATE</span><strong>—</strong>
+          </div>
+        </section>
+        <div id="source-details" class="source-details"></div>
+      </aside>
+    </main>
+    <dialog id="lab" class="lab">
+      <div class="dialog-header">
+        <div>
+          <span class="section-label">COMPUTATION WORKBENCH</span>
+          <h2>What moves across a connection?</h2>
+        </div>
+        <button id="lab-close" aria-label="Close computation workbench">
+          ×
+        </button>
+      </div>
+      <p class="lab-provenance">
+        Computed miniature · Hand-chosen operands, actual arithmetic.
+        Independent of the selected model.
+      </p>
+      <div class="lab-tabs" role="tablist" aria-label="Operation">
+        <button data-op="projection" role="tab" aria-selected="true">
+          Projection</button
+        ><button data-op="attention" role="tab" aria-selected="false">
+          Attention</button
+        ><button data-op="residual" role="tab" aria-selected="false">
+          Residual add</button
+        ><button data-op="router" role="tab" aria-selected="false">
+          Expert routing
+        </button>
+      </div>
+      <div class="lab-content">
+        <section>
+          <div class="lab-controls">
+            <label
+              >Query / token
+              <select id="lab-token"></select></label
+            ><label
+              >Output coordinate
+              <select id="lab-dim">
+                <option>0</option>
+                <option>1</option>
+              </select></label
+            >
+          </div>
+          <div id="lab-visual"></div>
+          <div class="playback">
+            <button id="play">▶ Play</button><button id="step">Step →</button
+            ><input
+              id="scrub"
+              type="range"
+              min="0"
+              max="4"
+              value="0"
+              aria-label="Computation step"
+            /><span id="step-count">0 / 4</span>
+          </div>
+        </section>
+        <section id="lab-explanation"></section>
+      </div>
+    </dialog>
+    <dialog id="help-dialog" class="help-dialog">
+      <div class="dialog-header">
+        <h2>Explore at your own scale</h2>
+        <button id="help-close" aria-label="Close instructions">×</button>
+      </div>
+      <p>
+        Drag to orbit, right-drag to pan, scroll or pinch to zoom. Select a
+        component, then double-click or press Enter to open it. The component
+        index provides the same navigation without using the canvas.
+      </p>
+      <p>
+        <strong>Semantic zoom</strong> reveals actual child components as the
+        selected region grows. Zoom farther in to enter it; zoom well out to
+        return to its parent. Use the explicit navigation buttons whenever you
+        prefer.
+      </p>
+      <p>
+        <strong>Geometry is schematic.</strong> Color identifies an operation
+        family. Box sizes and distances do not measure parameter count, feature
+        dimensionality, or execution time. Solid arrows show declared
+        dependencies; dashed lines show shared parameter identity.
+      </p>
+      <p>
+        <strong>Numbers need evidence.</strong> Structural packages provide
+        tensor shapes and coordinates. Missing values remain unavailable. The
+        arithmetic workbench uses a separate computed miniature. Imported files
+        are processed in this browser and are not uploaded.
+      </p>
+      <p>
+        <strong>Import:</strong> ModelIR 1.0 JSON or gzip, or an optional local
+        safetensors file for a tensor catalog. Generate new architecture
+        packages with the separate Python extractor. Arbitrary model
+        configurations need an adapter.
+      </p>
+      <p>
+        <kbd>F</kbd> fit · <kbd>Enter</kbd> enter selected ·
+        <kbd>Backspace</kbd> parent · <kbd>Esc</kbd> close dialog.
+      </p>
+      <p>
+        Visual semantics informed by
+        <a
+          href="https://www.3blue1brown.com/lessons/attention/"
+          target="_blank"
+          rel="noreferrer"
+          >3Blue1Brown’s transformer lessons</a
+        >, with independently implemented rendering.
+      </p>
+    </dialog>
+    <script type="module" src="/src/app.ts"></script>
+  </body>
+</html>

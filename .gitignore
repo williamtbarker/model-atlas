@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+*.safetensors
+*.pt
+*.pth
+.venv/
+dist/
+
+# Local deployment settings and generated release manifest
+.openai/
+BUILD_INFO.json
+.env
+.env.*
+!.env.example

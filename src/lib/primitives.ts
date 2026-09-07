@@ -1,0 +1,260 @@
+import type { Entity } from "../types";
+
+export interface PrimitiveSpec {
+  color: number;
+  width: number;
+  height: number;
+  depth: number;
+  family: string;
+  meaning: string;
+}
+const spec = (
+  color: number,
+  width: number,
+  height: number,
+  depth: number,
+  family: string,
+  meaning: string,
+): PrimitiveSpec => ({ color, width, height, depth, family, meaning });
+/** Geometry declares HOW. Entity existence is exclusively the package's decision. */
+export const PRIMITIVES: Record<string, PrimitiveSpec> = {
+  Model: spec(
+    0x6b93a8,
+    4.4,
+    1.5,
+    2.8,
+    "structure",
+    "Containment; spatial axes organize the diagram.",
+  ),
+  Module: spec(
+    0x6b93a8,
+    4.4,
+    1.2,
+    2.8,
+    "structure",
+    "Unknown module; no operation inferred.",
+  ),
+  TransformerBlock: spec(
+    0x769bc5,
+    4.4,
+    1.4,
+    2.8,
+    "structure",
+    "One declared decoder block, uniform scale.",
+  ),
+  RepeatedModuleArray: spec(
+    0x769bc5,
+    4.4,
+    1.3,
+    2.8,
+    "structure",
+    "Declared repeated children; marks show a bounded subset.",
+  ),
+  TensorVolume: spec(
+    0x68c4b9,
+    4.2,
+    1.3,
+    2.8,
+    "tensor",
+    "Indexed tensor; geometry does not imply rank 3.",
+  ),
+  MatrixPlane: spec(
+    0x65c4b5,
+    4.4,
+    0.28,
+    2.9,
+    "parameter",
+    "Matrix storage, exact shape in inspector; dimensions compressed.",
+  ),
+  VectorColumn: spec(
+    0x65c4b5,
+    1,
+    2.1,
+    1,
+    "parameter",
+    "One tensor axis; individual entries on inspection.",
+  ),
+  TokenStream: spec(
+    0xd6ba78,
+    4.2,
+    0.55,
+    1.6,
+    "activation",
+    "Token-indexed activations; no values implied.",
+  ),
+  DataflowTube: spec(
+    0xd6ba78,
+    3.8,
+    0.5,
+    1.4,
+    "activation",
+    "An explicit data dependency; timing not encoded.",
+  ),
+  ResidualBus: spec(
+    0xdfa169,
+    3.4,
+    0.65,
+    1.8,
+    "residual",
+    "Declared addition or weighted merge; formula disambiguates.",
+  ),
+  HyperConnectionMix: spec(
+    0xdfa169,
+    4.4,
+    1.15,
+    2.6,
+    "residual",
+    "Learned multi-stream residual mixing, not ordinary addition.",
+  ),
+  AttentionGrid: spec(
+    0x67b8df,
+    4.2,
+    0.25,
+    3.2,
+    "attention",
+    "Query rows × key columns; values need a trace.",
+  ),
+  AttentionHead: spec(
+    0x67b8df,
+    4.2,
+    1.1,
+    2.6,
+    "attention",
+    "Declared attention operation or head; no causal importance claim.",
+  ),
+  CompressedAttention: spec(
+    0x67b8df,
+    4.2,
+    1.1,
+    2.6,
+    "attention",
+    "Declared compressed attention; compression rules in attributes.",
+  ),
+  Compressor: spec(
+    0x8ba8df,
+    3.4,
+    1.1,
+    2.6,
+    "attention",
+    "Declared sequence compression; no invented full attention grid.",
+  ),
+  SparseIndexer: spec(
+    0x8ba8df,
+    3.4,
+    1.1,
+    2.6,
+    "attention",
+    "Observed or declared sparse position selection.",
+  ),
+  ProjectionBlock: spec(
+    0x71c7b5,
+    4.2,
+    0.9,
+    2.6,
+    "parameter",
+    "Declared transformation; axes and storage shape inspectable.",
+  ),
+  NormalizationPlane: spec(
+    0xcbcecf,
+    4.4,
+    0.22,
+    2.8,
+    "normalization",
+    "Normalization operation; axis/formula in attributes.",
+  ),
+  ActivationLayer: spec(
+    0xc193d4,
+    4.2,
+    0.85,
+    2.6,
+    "feedforward",
+    "Declared nonlinear operation or expert; formula in inspector.",
+  ),
+  ParameterVolume: spec(
+    0x71c7b5,
+    4.2,
+    1.3,
+    2.8,
+    "parameter",
+    "Parameter container; volume is schematic, not proportional.",
+  ),
+  ExpertCluster: spec(
+    0xc193d4,
+    4.4,
+    1.3,
+    2.8,
+    "feedforward",
+    "Declared experts; visibility does not mean execution.",
+  ),
+  RouterJunction: spec(
+    0xe0b76f,
+    3.4,
+    1.1,
+    2.5,
+    "router",
+    "Selection and weighting; no routes fabricated.",
+  ),
+  HashRouter: spec(
+    0xe0b76f,
+    3.4,
+    1.1,
+    2.5,
+    "router",
+    "Token-ID table routing, not score-based top-k.",
+  ),
+  ScoreRouter: spec(
+    0xe0b76f,
+    3.4,
+    1.1,
+    2.5,
+    "router",
+    "Declared score transform, selection and normalization.",
+  ),
+  SharedExpert: spec(
+    0xc193d4,
+    4.2,
+    0.85,
+    2.6,
+    "feedforward",
+    "Shared expert; distinct from routed selections.",
+  ),
+  EmbeddingTable: spec(
+    0xd6ba78,
+    4.4,
+    1.1,
+    2.8,
+    "embedding",
+    "Indexed embedding lookup; rows are not 3D semantic locations.",
+  ),
+  VocabularyPlane: spec(
+    0xd6ba78,
+    4.4,
+    0.35,
+    2.8,
+    "embedding",
+    "Vocabulary projection; tied weights retain one storage identity.",
+  ),
+  TensorTile: spec(
+    0x65c4b5,
+    4.4,
+    0.25,
+    2.9,
+    "tensor",
+    "Bounded exact coordinate slice, not a sampled full matrix.",
+  ),
+  ScalarCell: spec(
+    0x65c4b5,
+    0.6,
+    0.2,
+    0.6,
+    "tensor",
+    "Single addressed coordinate; missing is distinct from zero.",
+  ),
+};
+export const primitiveFor = (entity: Entity): PrimitiveSpec =>
+  Object.hasOwn(PRIMITIVES, entity.kind)
+    ? PRIMITIVES[entity.kind]
+    : PRIMITIVES.Module;
+export function colorHex(entity: Entity): string {
+  return `#${primitiveFor(entity).color.toString(16).padStart(6, "0")}`;
+}
