@@ -11,3 +11,7 @@
 - Vite, TypeScript, tsx, type definitions and their transitive dependencies retain the licenses distributed with their npm packages. `package-lock.json` pins the dependency tree.
 
 Acknowledgement: Visual explanations of embeddings, matrix transformations, token flow, and attention were informed by Grant Sanderson's 2024 3Blue1Brown transformer lessons. This project independently implements interactive model visualization and incorporates no scene implementation or media assets from the 3Blue1Brown videos repository.
+
+- **DM Sans** — SIL Open Font License 1.1. Local font files are redistributed with `public/fonts/dmsans-OFL.txt`.
+- **IBM Plex Mono** — SIL Open Font License 1.1. Local font files are redistributed with `public/fonts/ibmplexmono-OFL.txt`.
+  The landscape loads these fonts locally; it makes no Google Fonts request at runtime.

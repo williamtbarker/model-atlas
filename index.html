@@ -5,161 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Follow exact matrix products, attention and residual updates in a small trained transformer."
+      content="A continuous map of transformer architecture. Follow residual streams, inspect compressed attention, and explore every expert."
     />
-    <title>Model Atlas · Computation microscope</title>
+    <title>Model Atlas — Inside the architecture</title>
   </head>
   <body>
-    <div id="app">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">∑</span>
-          <div>
-            MODEL ATLAS<span class="brand-sub">COMPUTATION MICROSCOPE</span>
-          </div>
-        </div>
-        <div class="model-name">
-          <strong id="model-name">Loading trace…</strong
-          ><span id="model-size"></span>
-        </div>
-        <div class="top-actions">
-          <button id="about-button" class="quiet">About this model</button
-          ><a href="/architecture.html" class="quiet"
-            >Architecture explorer ↗</a
-          >
+    <div id="atlas-app">
+      <header class="masthead">
+        <a class="wordmark" href="/">MODEL<span>ATLAS</span></a
+        ><span class="header-divider"></span
+        ><span class="header-caption">INSIDE THE ARCHITECTURE</span>
+        <div class="header-right">
+          <a href="/microscope.html">Numerical microscope <span>↗</span></a
+          ><button id="about" class="text-button">Reading this map</button
+          ><select id="model-choice" aria-label="Model">
+            <option value="deepseek4">DeepSeek V4-Pro</option>
+            <option value="gpt2">GPT-2</option>
+          </select>
         </div>
       </header>
-      <div id="loading" role="status">Loading recorded computation…</div>
-      <div class="workspace" id="workspace" hidden>
-        <nav class="chapters" aria-label="Computation stage">
-          <button data-chapter="overview"><span>00</span>Model</button
-          ><button data-chapter="embedding"><span>01</span>Embed</button
-          ><button data-chapter="projection"><span>02</span>Project</button
-          ><button data-chapter="attention" aria-current="step">
-            <span>03</span>Attend</button
-          ><button data-chapter="write"><span>04</span>Write</button
-          ><button data-chapter="residual"><span>05</span>Add</button
-          ><button data-chapter="mlp"><span>06</span>MLP</button
-          ><button data-chapter="output"><span>07</span>Predict</button
-          ><button data-chapter="parameters"><span>08</span>Weights</button>
-        </nav>
-        <main class="visual-workspace">
-          <div class="view-controls">
-            <div class="segmented" id="layers" aria-label="Block"></div>
-            <div class="segmented" id="heads" aria-label="Attention head"></div>
-            <span class="control-spacer"></span
-            ><button id="flat-button" class="quiet" aria-pressed="false">
-              Face on</button
-            ><button id="disable-button" class="intervene" aria-pressed="false">
-              Disable this head
+      <main id="canvas-area">
+        <div id="canvas-host"></div>
+        <div id="loading">
+          <span class="loader-line"></span
+          ><strong>Unfolding the architecture</strong
+          ><span>Loading the compact structural package.</span>
+        </div>
+        <div class="atlas-title">
+          <div class="eyebrow" id="map-eyebrow">ARCHITECTURE / 2026</div>
+          <h1 id="map-title">DeepSeek<br /><em>V4-Pro.</em></h1>
+          <p id="map-description">
+            A complete model.<br />One continuous landscape.
+          </p>
+          <div class="title-facts" id="title-facts"></div>
+        </div>
+        <div class="mode-controls">
+          <button data-view="model" class="active">Whole model</button
+          ><button data-view="block">Block</button
+          ><button data-view="attention">Attention</button
+          ><button data-view="experts">Experts</button
+          ><button
+            id="face-on"
+            aria-pressed="false"
+            title="Toggle planar camera"
+          >
+            ↗ / ▧
+          </button>
+        </div>
+        <div class="map-key">
+          <span><i class="key-attention"></i>attention / memory</span
+          ><span><i class="key-expert"></i>expert computation</span
+          ><span><i class="key-residual"></i>residual streams</span>
+        </div>
+        <div class="selected-caption" id="selected-caption" hidden></div>
+        <aside id="inspector">
+          <div class="panel-top">
+            <span class="eyebrow">COMPONENT LENS</span
+            ><button id="collapse-panel" aria-label="Toggle component details">
+              −
             </button>
           </div>
-          <section class="stage" aria-label="Interactive computation">
-            <div id="canvas-host"></div>
-            <div class="stage-heading">
-              <span id="stage-kicker">BLOCK 1 / HEAD 1</span>
-              <h1 id="stage-title">Where to read.</h1>
-              <p id="stage-description">
-                Select a connection. Follow what it contributes.
-              </p>
+          <div id="panel-body">
+            <div class="selection-kind" id="selection-kind">MODEL TOPOLOGY</div>
+            <h2 id="selection-title">All of it, in context.</h2>
+            <p id="selection-description">
+              Zoom into a block to reveal its attention and expert machinery.
+            </p>
+            <div id="selection-facts" class="facts"></div>
+            <div id="formula" class="formula" hidden></div>
+            <div id="tensor-info" hidden></div>
+            <div id="selection-actions" class="selection-actions"></div>
+            <div id="connection-list" class="connection-list" hidden></div>
+            <div class="search-wrap">
+              <label for="search">FIND A COMPONENT</label
+              ><input
+                id="search"
+                type="search"
+                placeholder="Block, expert, tensor name…"
+                autocomplete="off"
+              />
+              <div id="search-results"></div>
             </div>
-            <div class="view-legend">
-              <span><i class="positive"></i>positive</span
-              ><span><i class="negative"></i>negative</span
-              ><span><i class="residual-key"></i>residual</span
-              ><label
-                ><input type="checkbox" id="difference" /> changes only</label
-              >
+            <div class="evidence-note">
+              <span class="evidence-dot"></span>Architecture metadata. Weight
+              values and runtime activity are not loaded.
             </div>
-            <div id="hover-value" hidden></div>
-            <div class="stage-hint">
-              Drag to orbit · scroll to zoom · click a cell · double-click to
-              approach
-            </div>
-            <div id="stats" class="stats"></div>
-          </section>
-          <section class="prompt-bar" aria-label="Recorded examples">
-            <div class="prompt-top">
-              <label for="example">RECORDED INPUT</label
-              ><select id="example"></select
-              ><span id="task-description"></span>
-            </div>
-            <div class="token-row" id="tokens"></div>
-            <div class="prediction-row" aria-live="polite">
-              <span>Next token</span><strong id="prediction">—</strong
-              ><span id="prediction-confidence"></span
-              ><span class="prediction-change" id="prediction-change"></span
-              ><span id="expected"></span>
-            </div>
-          </section>
-        </main>
-        <aside class="inspector" aria-label="Selected computation">
-          <div class="inspector-top">
-            <span class="eyebrow">EXACT COMPUTATION</span
-            ><button id="focus-button" class="quiet">Approach ↗</button>
-          </div>
-          <label class="operation-picker"
-            >Operation<select id="operation"></select
-          ></label>
-          <div class="coordinate-controls">
-            <label
-              ><span id="row-label">Coordinate</span
-              ><select id="row"></select></label
-            ><label
-              ><span id="col-label">Token</span
-              ><select id="col"></select
-            ></label>
-          </div>
-          <div class="selected-value">
-            <span id="value-label">Output</span><strong id="value">—</strong
-            ><span id="baseline-value"></span>
-          </div>
-          <div id="equation" class="equation"></div>
-          <div class="transport">
-            <button id="play-button" class="play-button">
-              ▶ Follow contributions</button
-            ><input
-              id="scrubber"
-              aria-label="Computation progress"
-              type="range"
-              min="0"
-              max="1000"
-              value="0"
-            />
-            <div class="accumulation">
-              <span id="sum-label">Accumulated</span
-              ><strong id="running-sum">0.000000</strong>
-            </div>
-          </div>
-          <div
-            id="signed-chart"
-            class="signed-chart"
-            aria-label="Signed contributions"
-          ></div>
-          <div class="term-header">
-            <span>TERM</span><span>OPERANDS</span><span>CONTRIBUTION</span>
-          </div>
-          <div id="terms" class="terms"></div>
-          <p id="computation-note" class="computation-note"></p>
-          <div class="inspector-footer">
-            <span id="tensor-shape"></span
-            ><button id="copy-value" class="quiet">Copy exact value</button>
+            <a class="calculation-link" href="/microscope.html"
+              >Explore a recorded calculation <span>↗</span
+              ><small>Exact arithmetic in the trained Recall-2 model</small></a
+            >
           </div>
         </aside>
-      </div>
+        <div class="bottom-bar">
+          <div class="map-navigation">
+            <button id="previous-block" aria-label="Previous block">←</button>
+            <div>
+              <span class="eyebrow">POSITION IN MODEL</span
+              ><strong id="position-label">All core blocks</strong>
+            </div>
+            <button id="next-block" aria-label="Next block">→</button>
+            <div id="block-map" aria-label="Navigate decoder blocks"></div>
+            <button id="reset-view" title="Fit the whole model">
+              Fit model ↗
+            </button>
+          </div>
+          <div class="status-line">
+            <span
+              >Drag to orbit · shift-drag to pan · scroll to reveal detail ·
+              click to inspect</span
+            ><span id="stats"></span>
+          </div>
+        </div>
+      </main>
+      <dialog id="about-dialog">
+        <button id="close-about" aria-label="Close">×</button
+        ><span class="eyebrow">HOW TO READ THE LANDSCAPE</span>
+        <h2>Geometry carries meaning.</h2>
+        <p>
+          The long colored ribbons are residual streams. Attention appears as a
+          fan of query heads reading shared memory. Expert banks contain a mark
+          for every available expert. Matrix sheets reveal their exact logical
+          dimensions when selected.
+        </p>
+        <p>
+          Blocks retain their positions as you zoom. The folded arrangement
+          makes the complete architecture fit on a laptop; distance in this map
+          does not encode execution time or learned similarity.
+        </p>
+        <p>
+          Lines represent declared dependencies. No glowing expert is presented
+          as active without a recorded input. Compressed memory reduces sequence
+          positions, not feature dimensions. Auxiliary prediction modules remain
+          separate from the main decoder chain.
+        </p>
+        <p>
+          The separate numerical microscope includes all weights and recorded
+          intermediates of a tiny trained transformer. Those recordings are not
+          DeepSeek activations.
+        </p>
+        <a href="/architecture.html">Open the full metadata catalog ↗</a>
+      </dialog>
     </div>
-    <dialog id="about-dialog">
-      <button id="close-about" class="quiet dialog-close">Close ×</button
-      ><span class="eyebrow">A SMALL MODEL YOU CAN FULLY INSPECT</span>
-      <h2>Learned lookup. Every number visible.</h2>
-      <div id="about-content"></div>
-      <a
-        href="https://transformer-circuits.pub/2021/framework/index.html"
-        target="_blank"
-        rel="noreferrer"
-        >Transformer Circuits: mathematical framework ↗</a
-      >
-    </dialog>
-    <script type="module" src="/src/microscope/app.ts"></script>
+    <script type="module" src="/src/landscape/app.ts"></script>
   </body>
 </html>

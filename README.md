@@ -1,30 +1,38 @@
 # Model Atlas
 
-An interactive microscope for transformer computation. Explore a small trained
-model, inspect an individual matrix product, follow signed contributions, and
-replay a head ablation without running inference.
+Explore a transformer as one continuous landscape: residual ribbons, attention
+heads, compressed memory, routers, expert fields and parameter matrices. Approach
+an operation, follow its declared connections, and inspect exact tensor dimensions
+without downloading the model's weights.
 
-**First public release: v0.1.0. Experimental.** The main view is the new computation microscope.
-The earlier structural explorer is retained at `/architecture.html`.
+**0.2.0-alpha.1 — continuous landscape review build.** The landing page now opens
+DeepSeek-V4-Pro's 61 core blocks together. An auxiliary prediction block remains
+separate. GPT-2 is included as a reference model. Camera zoom reveals operations
+inside the same spatial layout.
 
-The bundled architecture explorer includes GPT-2 and DeepSeek-V4-Pro structural
-packages. DeepSeek's architecture can be navigated without its full weights;
-the numerical microscope currently runs recorded examples from the small Recall-2
-model. A polished, continuous view unifying both scales is a development goal.
+This is a structural map. It does not contain DeepSeek's trained parameter values
+or runtime activations. The separate [numerical microscope](microscope.html)
+contains exact recorded arithmetic from the small trained Recall-2 model.
+
+**Visual review is still required.** Browser access was blocked in the development
+environment. The build and mathematical checks are verified separately; no claim
+of completed browser visual QA or measured MacBook graphics performance is made.
+See [review notes](LANDSCAPE_REVIEW.md) and [visual semantics](docs/landscape.md).
 
 ## Run from GitHub
 
 With Node.js 22.12 or newer:
 
 ```bash
-git clone https://github.com/williamtbarker/model-atlas.git
+git clone --branch feat/continuous-landscape https://github.com/williamtbarker/model-atlas.git
 cd model-atlas
 npm ci
 npm run dev
 ```
 
-Open the address Vite prints, normally http://127.0.0.1:5173. Use the Architecture
-link for the bundled GPT-2 and DeepSeek structural packages.
+Open the address Vite prints, normally http://127.0.0.1:5173. The landscape opens
+DeepSeek immediately. Use the model selector for GPT-2. The `main` branch and
+`v0.1.0` tag retain the prior public release until this preview is reviewed.
 
 `dist/` is generated and is not committed to Git. To use `node serve.mjs` from a
 clone, first run `npm run build`. The downloadable release ZIP already includes
@@ -58,12 +66,28 @@ source reload automatically. `npm run build` refreshes the supplied static build
 
 The browser requires no Python, CUDA, PyTorch, LaTeX, Manim, inference endpoint,
 account, or large model download. Its only runtime graphics dependency is Three.js.
-The development dependency directory measured about **92 MB** in the build
-environment; this varies by platform. It is omitted from the ZIP. A normal first
-load of the microscope transfers roughly **1.9 MB** including its compressed
-recordings and application code. The optional architecture page loads its own data.
+The ZIP omits `node_modules`. Compressed architecture metadata, locally bundled
+fonts and application assets are sufficient for the landscape; the numerical
+recordings load only when you open the microscope.
 
-## Try this first
+## Explore the landscape
+
+1. **Whole model** fits the complete decoder. The bottom strip addresses every
+   core block; the component lens also links to the auxiliary block.
+2. **Block** approaches the selected block. **Attention** and **Experts** move
+   closer; scrolling preserves the same spatial anchors.
+3. Click an operation to see dimensions, formulas and declared connections.
+   Follow an input or output to inspect the connected operator.
+4. Click any expert mark, or choose an expert in the component lens. Approach it
+   to reveal its own parameter sheets, then enter a valid scalar coordinate.
+   The address is exact; absent trained values are explicitly unavailable.
+5. Use **Numerical microscope** for recorded calculations, signed contributions
+   and head ablations in Recall-2. The earlier metadata catalog is linked under
+   **Reading this map**.
+
+## Numerical microscope
+
+Open `/microscope.html` for these recorded calculations:
 
 1. The initial prompt is `C 4 A 2 B 1 ? C`. The learned task is to return `4`.
 2. Choose **Project**, click a Q coordinate, and press **Approach**. Its input and
@@ -114,6 +138,7 @@ and the optional NumPy-only reproduction workflow.
 
 | Location                       | Responsibility                                                                                           |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `src/landscape/` | Continuous architecture layout, semantic glyphs, camera and connection lens |
 | `src/microscope/adapter.ts`    | Recorded transformer trace → canonical ModelIR and numerical scene views                                 |
 | `src/microscope/renderer.ts`   | Persistent Three.js scene, numerical planes, coordinate picking, semantic detail, contribution transport |
 | `src/microscope/arithmetic.ts` | Exact selected-coordinate decomposition                                                                  |
@@ -158,6 +183,8 @@ human review.** This release does not claim completed browser visual QA.
 
 ## Design, prior art, and license
 
+- [Continuous landscape semantics and limits](docs/landscape.md)
+- [Landscape review build](LANDSCAPE_REVIEW.md)
 - [Development roadmap](ROADMAP.md)
 - [v0.1.0 release notes](RELEASE_NOTES.md)
 - [Visual semantics and review checklist](docs/microscope-visual-semantics.md)
