@@ -38,11 +38,13 @@ connections, bounded layout and navigation state. Browser access was blocked in
 the development environment. **No fresh browser visual QA or graphics performance
 benchmark is claimed for this round.**
 
-## Open the supplied build
+## Build and open the viewer
 
-In the unzipped `model-atlas` directory, run:
+In the cloned or extracted source directory, run:
 
 ```bash
+npm ci
+npm run build
 node serve.mjs
 ```
 

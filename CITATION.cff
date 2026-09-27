@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use Model Atlas in your work, please cite this software."
+type: software
+title: "Model Atlas: transformer architecture explorer and numerical microscope"
+authors:
+  - family-names: Barker
+    given-names: Will
+repository-code: "https://github.com/williamtbarker/model-atlas"
+url: "https://github.com/williamtbarker/model-atlas"
+version: 0.2.0
+license: MIT
+keywords:
+  - transformers
+  - visualization
+  - model architecture
+  - interpretability

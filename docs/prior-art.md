@@ -37,7 +37,7 @@ No scene implementation, scene helpers, video assets, narration, camera choreogr
 
 ## Computation microscope: September 2026 extension
 
-The user's suggested [A Mathematical Framework for Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html) supplies the most useful change in emphasis: treat the residual stream as shared communication, and distinguish an attention head's **where-to-read** calculation from **what-to-write** transformation. The paper's analysis emphasizes simplified attention-only transformers; its circuit interpretations are not automatically established for this two-block model with MLPs.
+The paper [A Mathematical Framework for Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html) supplies the most useful change in emphasis: treat the residual stream as shared communication, and distinguish an attention head's **where-to-read** calculation from **what-to-write** transformation. The paper's analysis emphasizes simplified attention-only transformers; its circuit interpretations are not automatically established for this two-block model with MLPs.
 
 The microscope makes scaled QK scores and row softmax separate inspectable planes, then shows value mixing, the output projection, additive head writes, and the unchanged residual bypass. Signed contributions can reinforce or cancel. Head ablations use complete precomputed downstream runs, so the display can show an intervention's effect without confusing attention strength with causal importance. A future direct source-to-residual view can expose the combined OV transformation; this release follows its two constituent operations instead.
 
@@ -55,6 +55,6 @@ The [Distill investigation of t-SNE](https://distill.pub/2016/misread-tsne/) dem
 
 ## Hero selection
 
-GPT-2 was retained for independently checkable accounting. Qwen3-235B-A22B-Instruct-2507 was considered and its GQA/MoE structure reviewed, but its 2025 release did not satisfy the user's 2026 hero requirement. Qwen3.5, Kimi K3 and DeepSeek V4 were then checked against public primary metadata.
+GPT-2 was retained for independently checkable accounting. Qwen3-235B-A22B-Instruct-2507 was considered and its GQA/MoE structure reviewed, but its 2025 release did not meet the 2026 release scope selected for the showcase. Qwen3.5, Kimi K3 and DeepSeek V4 were then checked against public primary metadata.
 
 [DeepSeek-V4-Pro](https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro) satisfies both the 2026 and trillion-scale criteria, with a public implementation and MIT license. This is a useful inspection target, not a claim of current-best performance or frontier parity. Its compressed attention and hyper-connections make architectural independence testable: relabeling a conventional GPT diagram would be wrong. The exact pinned sources and accounting are recorded separately.

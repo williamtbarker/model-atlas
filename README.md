@@ -49,41 +49,32 @@ Open the address Vite prints, normally http://127.0.0.1:5173. The landscape open
 DeepSeek immediately. Use the model selector to switch among the four bundled
 architectures. The original `v0.1.0` tag preserves the earlier public checkpoint.
 
-`dist/` is generated and is not committed to Git. To use `node serve.mjs` from a
-clone, first run `npm run build`. The downloadable release ZIP already includes
-the build.
+`dist/` is generated and is not committed to Git. The GitHub release currently
+provides source archives, not a prebuilt viewer asset. Build the source before
+using `node serve.mjs`, as shown below.
 
-## Open the supplied ZIP
+## Serve a local production build
 
-Install [Node.js](https://nodejs.org/) 22.12+ or 24, unzip the bundle, and open a
-terminal in its `model-atlas` folder.
-
-The ZIP includes a built viewer, so the quickest route needs **no npm install**:
+From the cloned repository, install the locked dependencies and create the build:
 
 ```bash
+npm ci
+npm run build
 node serve.mjs
 ```
 
 Open **http://127.0.0.1:4173** in a current browser. Keep the terminal open; Ctrl+C
 stops the server. If the port is occupied, use `ATLAS_PORT=4174 node serve.mjs`.
 Double-clicking `dist/index.html` will not work because browsers restrict local
-module and data requests.
+module and data requests. A GitHub source ZIP requires these same installation
+and build steps after extraction.
 
-To edit the code:
-
-```bash
-npm install
-npm run dev
-```
-
-Open the local address Vite prints, normally http://127.0.0.1:5173. Changes to
-source reload automatically. `npm run build` refreshes the supplied static build.
-
-The browser requires no Python, CUDA, PyTorch, LaTeX, Manim, inference endpoint,
-account, or large model download. Its only runtime graphics dependency is Three.js.
-The ZIP omits `node_modules`. Compressed architecture metadata, locally bundled
-fonts and application assets are sufficient for the landscape; the numerical
-recordings load only when you open the microscope.
+After the build exists, the server uses only Node's standard library. The browser
+requires no Python, CUDA, PyTorch, LaTeX, Manim, inference endpoint, account, or
+large model download. Its only runtime graphics dependency is Three.js.
+Compressed architecture metadata, locally bundled fonts and application assets
+are sufficient for the landscape; the numerical recordings load only when you
+open the microscope.
 
 ## Explore the landscape
 
@@ -219,6 +210,7 @@ here. No measured MacBook graphics performance is claimed.
 - [Validation scope and local review](LANDSCAPE_REVIEW.md)
 - [Development roadmap](ROADMAP.md)
 - [Release notes, including the preserved v0.1.0 checkpoint](RELEASE_NOTES.md)
+- [Changelog](CHANGELOG.md), [contributing](CONTRIBUTING.md), and [citation metadata](CITATION.cff)
 - [Visual semantics and review checklist](docs/microscope-visual-semantics.md)
 - [Implementation limits and scaling path](docs/microscope-design.md)
 - [3Blue1Brown / Manim and other prior art](docs/prior-art.md)

@@ -1,5 +1,10 @@
 # Model Atlas v0.2.0
 
+GitHub currently supplies source archives without a prebuilt viewer asset. Follow
+the [README build instructions](README.md#serve-a-local-production-build).
+Historical references below to a ready-built ZIP describe the prepared bundle;
+they do not mean a binary asset is attached to the public release.
+
 The landing page is now a continuous architecture landscape. Components retain
 spatial context while zoom resolves attention, residual paths, routing, expert
 banks and parameter matrices. The numerical microscope remains available for
@@ -28,8 +33,9 @@ mappings. No large-model weights or runtime activations are included.
   exploration. Links preserve view mode but not exact camera orbit.
 - Obsolete model requests are cancelled; stale successes and errors cannot
   replace the current view. Search is cleared safely during model changes.
-- The prebuilt ZIP starts with `node serve.mjs`; source clones use `npm ci` and
-  `npm run dev`. Python extraction remains a separate, optional workflow.
+- Source clones and source archives use `npm ci` followed by `npm run dev`, or
+  `npm run build` and `node serve.mjs`. Python extraction remains a separate,
+  optional workflow.
 
 ## Validation
 
